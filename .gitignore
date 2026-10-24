@@ -18,3 +18,8 @@ data/hillstrom.csv
 .env.*
 # Local VS Code workspace settings
 .vscode/
+# Generated pricing data
+data/prepared_pricing.csv
+
+# Local notebook backup
+notebooks/01_hillstrom_eda_backup.ipynb
