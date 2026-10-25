@@ -1,0 +1,6 @@
+discount_rate,customers,expected_purchase_rate,expected_revenue_per_customer,expected_profit_per_customer,total_expected_revenue,total_expected_profit
+0.05,10000,0.2354,82.17,33.42,821743.83,334186.01
+0.0,10000,0.2078,76.16,33.24,761609.82,332435.25
+0.1,10000,0.2653,87.95,32.85,879531.41,328546.76
+0.15,10000,0.2972,93.33,31.41,933261.15,314052.64
+0.2,10000,0.3311,98.11,28.93,981100.87,289266.88
