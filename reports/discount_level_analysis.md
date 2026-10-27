@@ -80,3 +80,16 @@ The following tasks should be completed before final submission:
 The latest policy comparison shows a trade-off between customer purchase rate and expected profitability. The 20% discount produced the highest expected purchase rate, while the 5% discount produced the highest expected profit among the five tested policies.
 
 These findings demonstrate the importance of evaluating pricing strategies using profit-based metrics alongside customer-response measures. Further validation and sensitivity analysis are required before making real-world pricing recommendations.
+
+## Pricing Results Validation
+
+The discount-policy results in this report were cross-checked against `reports/pricing_policy_comparison.csv` from the Hiba branch.
+
+### Validation Findings
+- The comparison evaluates five discount levels: 0%, 5%, 10%, 15%, and 20%.
+- The 5% discount achieves the highest expected total profit of 334,186.01.
+- The 20% discount achieves the highest expected purchase rate of 33.11%.
+- Expected total profit is lower at discount levels above 5% in the tested scenarios.
+
+### Limitations
+The results are based on 10,000 simulated customers. They depend on the model and pricing assumptions used in the experiment and should not be interpreted as proof of real-world profitability. Further validation using real transaction data and sensitivity analysis is recommended.
