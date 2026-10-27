@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from load_pricing_data import load_pricing_data
+from src.data_processing.load_pricing_data import load_pricing_data
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
