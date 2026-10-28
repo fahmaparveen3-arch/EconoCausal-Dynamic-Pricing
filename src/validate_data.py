@@ -47,6 +47,7 @@ def validate_dataset(file_path):
 
     # 4. Duplicate rows
     duplicate_count = int(df.duplicated().sum())
+
     print("\nDUPLICATE ROW CHECK")
     print("-" * 40)
     print(f"Duplicate rows found: {duplicate_count}")
@@ -92,22 +93,70 @@ def validate_dataset(file_path):
         print(f"Observed values: {observed}")
         print(f"Invalid discount values: {int(invalid_discounts.sum())}")
 
-    # 6. Purchase outcome validation
+    # 6. Treatment and discount consistency validation
+    print("\nTREATMENT CONSISTENCY VALIDATION")
+    print("-" * 40)
+
+    required_columns = {"discount_rate", "treatment"}
+
+    if required_columns.issubset(df.columns):
+        discount = pd.to_numeric(
+            df["discount_rate"], errors="coerce"
+        )
+        treatment = pd.to_numeric(
+            df["treatment"], errors="coerce"
+        )
+
+        invalid_treatment = (
+            treatment.isna() | ~treatment.isin({0, 1})
+        )
+
+        expected_treatment = (discount > 0).astype(int)
+
+        inconsistent_treatment = (
+            discount.isna()
+            | discount.lt(0)
+            | invalid_treatment
+            | treatment.ne(expected_treatment)
+        )
+
+        print(
+            f"Invalid treatment values: "
+            f"{int(invalid_treatment.sum())}"
+        )
+        print(
+            "Treatment-discount inconsistencies: "
+            f"{int(inconsistent_treatment.sum())}"
+        )
+    else:
+        missing_columns = required_columns - set(df.columns)
+
+        print(
+            "Skipped: Missing required columns: "
+            + ", ".join(sorted(missing_columns))
+        )
+
+    # 7. Purchase outcome validation
     print("\nPURCHASE OUTCOME VALIDATION")
     print("-" * 40)
 
     if "purchase" in df.columns:
-        purchase = pd.to_numeric(df["purchase"], errors="coerce")
+        purchase = pd.to_numeric(
+            df["purchase"], errors="coerce"
+        )
 
         invalid_purchase = (
             purchase.isna() | ~purchase.isin({0, 1})
         )
 
-        print(f"Invalid purchase values: {int(invalid_purchase.sum())}")
+        print(
+            f"Invalid purchase values: "
+            f"{int(invalid_purchase.sum())}"
+        )
     else:
         print("Skipped: No 'purchase' column found.")
 
-    # 7. Customer identifier check
+    # 8. Customer identifier check
     print("\nCUSTOMER IDENTIFIER CHECK")
     print("-" * 40)
 
@@ -117,10 +166,15 @@ def validate_dataset(file_path):
 
         print(f"Unique customer IDs: {unique_ids}")
         print(f"Missing customer IDs: {missing_ids}")
+
+        duplicate_ids = int(
+            df["customer_id"].duplicated().sum()
+        )
+        print(f"Duplicate customer IDs: {duplicate_ids}")
     else:
         print("Skipped: No 'customer_id' column found.")
 
-    # 8. Final summary
+    # 9. Final summary
     print("\nVALIDATION SUMMARY")
     print("=" * 40)
 
@@ -143,4 +197,3 @@ if __name__ == "__main__":
     ).strip().strip('"')
 
     validate_dataset(dataset_path)
-
