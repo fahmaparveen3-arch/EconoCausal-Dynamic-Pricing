@@ -54,15 +54,36 @@ def main():
     # Estimate effects only for the held-out customers.
     estimates = evaluate_dml_holdout(df)
 
-    merged = test_df[["customer_id", "age", "income",
-                      "past_purchases", "product_category"]].merge(
+    # Preserve every holdout customer when matching DML estimates.
+    merged = test_df[
+        [
+            "customer_id",
+            "age",
+            "income",
+            "past_purchases",
+            "product_category",
+        ]
+    ].merge(
         estimates,
         on="customer_id",
-        how="inner",
+        how="left",
         validate="one_to_one",
     )
 
-    probability_no_discount = calculate_purchase_probability(merged, 0.0)
+    # Fail explicitly if the merge or model output is incomplete.
+    if len(merged) != len(test_df):
+        raise ValueError(
+            "Holdout customer count changed during the merge."
+        )
+
+    if merged["estimated_discount_effect"].isna().any():
+        raise ValueError(
+            "Missing DML estimates for some holdout customers."
+        )
+
+    probability_no_discount = calculate_purchase_probability(
+        merged, 0.0
+    )
 
     counterfactual_effects = []
 
@@ -74,6 +95,7 @@ def main():
             probability_with_discount - probability_no_discount
         )
 
+    # Intended policy: equal weighting of the four discount levels.
     true_effect = np.mean(counterfactual_effects, axis=0)
     estimated_effect = merged["estimated_discount_effect"].to_numpy()
 
@@ -88,7 +110,9 @@ def main():
     estimated_ate = float(np.mean(estimated_effect))
     bias = estimated_ate - true_ate
     mae = float(np.mean(np.abs(estimated_effect - true_effect)))
-    rmse = float(np.sqrt(np.mean((estimated_effect - true_effect) ** 2)))
+    rmse = float(
+        np.sqrt(np.mean((estimated_effect - true_effect) ** 2))
+    )
 
     REPORT_FILE.parent.mkdir(parents=True, exist_ok=True)
     report.to_csv(REPORT_FILE, index=False)
@@ -96,6 +120,7 @@ def main():
     print("\nDML Holdout Validation")
     print("----------------------")
     print(f"Customers evaluated: {len(report)}")
+    print(f"Holdout customers:   {len(test_df)}")
     print(f"True policy ATE:     {true_ate:.6f}")
     print(f"Estimated DML ATE:   {estimated_ate:.6f}")
     print(f"ATE estimation bias: {bias:.6f}")
