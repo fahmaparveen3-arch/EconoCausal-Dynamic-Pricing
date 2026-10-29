@@ -67,3 +67,54 @@ A validation report should record:
 Model validation is necessary before using DML estimates to support pricing decisions. The model's results should be evaluated alongside uncertainty, assumptions, and profit-based metrics.
 
 Because the current dataset is synthetic, the findings should not be presented as proof of real-world customer behaviour.
+
+## Completed: Dataset Quality Validation
+
+### 1. Validation Overview
+
+The synthetic pricing dataset was checked using `src/validate_data.py` before proceeding with further model evaluation.
+
+- **Dataset:** `data/synthetic_pricing.csv`
+- **Rows checked:** 10,000
+- **Columns checked:** 14
+- **Duplicate rows:** 0
+- **Missing values:** 0
+
+### 2. Validation Results
+
+| Check | Result | Status |
+|---|---|---|
+| Dataset structure | 10,000 rows and 14 columns | Passed |
+| Missing values | No missing values found | Passed |
+| Duplicate rows | No duplicate rows found | Passed |
+| Discount levels | 0%, 5%, 10%, 15%, and 20% | Passed |
+| Invalid discount values | 0 | Passed |
+| Treatment values | No invalid values found | Passed |
+| Treatment-discount consistency | No inconsistencies found | Passed |
+| Purchase outcome | No invalid values found | Passed |
+| Customer identifiers | 10,000 unique IDs | Passed |
+
+### 3. Interpretation
+
+The dataset passed the implemented structural and consistency checks. The validation found no missing values, duplicate rows, invalid discount levels, invalid treatment values, treatment-discount inconsistencies, or invalid purchase outcomes.
+
+These results support using the dataset for subsequent analysis, subject to appropriate checks of the analysis assumptions and methodology.
+
+### 4. Limitations and Pending Model Evaluation
+
+**Dataset quality validation does not establish that the DML model is accurate or that its causal estimates are reliable.**
+
+The following checks remain separate tasks and should be completed before claiming that the model has been fully validated:
+
+- Verify the DML implementation and model configuration.
+- Evaluate treatment and outcome distributions.
+- Compare DML estimates against suitable baselines.
+- Assess performance on held-out data.
+- Investigate the stability and uncertainty of treatment-effect estimates.
+- Review the assumptions required for causal interpretation.
+
+The dataset is synthetic. Therefore, its results should not be presented as evidence of actual customer behaviour or real-world pricing effectiveness.
+
+### 5. Conclusion
+
+The initial dataset quality checks passed. Further model-level evaluation is required before drawing conclusions about the reliability of the estimated treatment effects or the effectiveness of a pricing policy.
