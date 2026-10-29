@@ -113,3 +113,54 @@ def test_evaluate_dml_holdout_returns_valid_test_customers(
     assert np.isfinite(
         results["estimated_discount_effect"].to_numpy()
     ).all()
+
+@pytest.mark.parametrize(
+    ("column", "value", "message"),
+    [
+        ("age", np.nan, "non-finite values"),
+        ("income", np.inf, "non-finite values"),
+        ("income", -100, "Income cannot be negative"),
+        ("age", 17, "Age must be between 18 and 70"),
+        ("age", 71, "Age must be between 18 and 70"),
+        ("past_purchases", -1, "Past purchases cannot be negative"),
+    ],
+)
+
+def test_validate_dml_data_rejects_invalid_numeric_values(
+    sample_dml_data, column, value, message
+):
+    invalid_data = sample_dml_data.copy()
+
+    if column == "income" and np.isinf(value):
+        invalid_data["income"] = invalid_data["income"].astype(float)
+
+    if pd.isna(value):
+        expected_message = "missing values"
+    else:
+        expected_message = message
+
+    invalid_data.loc[0, column] = value
+
+    with pytest.raises(ValueError, match=expected_message):
+        validate_dml_data(invalid_data)
+
+
+
+def test_validate_dml_data_rejects_missing_treatment(
+    sample_dml_data,
+):
+    invalid_data = sample_dml_data.copy()
+    invalid_data.loc[0, "treatment"] = np.nan
+
+    with pytest.raises(ValueError, match="missing values"):
+        validate_dml_data(invalid_data)
+
+
+def test_validate_dml_data_rejects_missing_purchase(
+    sample_dml_data,
+):
+    invalid_data = sample_dml_data.copy()
+    invalid_data.loc[0, "purchase"] = np.nan
+
+    with pytest.raises(ValueError, match="missing values"):
+        validate_dml_data(invalid_data)

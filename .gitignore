@@ -23,3 +23,5 @@ data/prepared_pricing.csv
 
 # Local notebook backup
 notebooks/01_hillstrom_eda_backup.ipynb
+# Local estimator-comparison backup
+src/evaluation/compare_dml_estimators.py.backup
