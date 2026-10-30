@@ -53,3 +53,9 @@ def test_inconsistent_discounted_price_is_reported():
     df.loc[0, "discounted_price"] = 95.0
     issues = validate_pricing_data(df)
     assert any("Discounted prices" in issue for issue in issues)
+
+def test_empty_dataset_is_reported():
+    df = make_valid_data().iloc[0:0]
+    issues = validate_pricing_data(df)
+
+    assert "Dataset is empty." in issues
