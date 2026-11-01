@@ -1,0 +1,82 @@
+import io
+import tempfile
+import unittest
+from contextlib import redirect_stdout
+from pathlib import Path
+
+import pandas as pd
+
+from src.validate_pricing_calculations import (
+    validate_pricing_calculations,
+)
+
+
+class TestPricingCalculations(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.csv_path = Path(self.temp_dir.name) / "test_pricing.csv"
+
+        self.valid_data = pd.DataFrame({
+            "original_price": [100.0, 50.0],
+            "discount_rate": [0.10, 0.0],
+            "discounted_price": [90.0, 50.0],
+            "units_sold": [2, 1],
+            "purchase": [1, 1],
+            "revenue": [180.0, 50.0],
+            "discount_cost": [20.0, 0.0],
+        })
+
+        self.valid_data.to_csv(self.csv_path, index=False)
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def run_validator(self):
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            result = validate_pricing_calculations(self.csv_path)
+
+        return result, output.getvalue()
+
+    def test_valid_pricing_data_passes(self):
+        result, output = self.run_validator()
+
+        self.assertTrue(result)
+        self.assertIn("FINAL RESULT: PASS", output)
+
+    def test_incorrect_revenue_is_detected(self):
+        self.valid_data.loc[0, "revenue"] = 181.0
+        self.valid_data.to_csv(self.csv_path, index=False)
+
+        result, output = self.run_validator()
+
+        self.assertFalse(result)
+        self.assertIn("FAIL: Revenue calculation", output)
+
+    def test_invalid_discount_rate_is_detected(self):
+        self.valid_data.loc[0, "discount_rate"] = 1.2
+        self.valid_data.loc[0, "discounted_price"] = -20.0
+        self.valid_data.loc[0, "revenue"] = -40.0
+        self.valid_data.loc[0, "discount_cost"] = 240.0
+        self.valid_data.to_csv(self.csv_path, index=False)
+
+        result, output = self.run_validator()
+
+        self.assertFalse(result)
+        self.assertIn("FAIL: Valid discount rates", output)
+
+    def test_missing_required_column_is_detected(self):
+        self.valid_data.drop(columns=["discount_cost"]).to_csv(
+            self.csv_path, index=False
+        )
+
+        result, output = self.run_validator()
+
+        self.assertFalse(result)
+        self.assertIn("Missing required columns", output)
+
+
+if __name__ == "__main__":
+    unittest.main()
