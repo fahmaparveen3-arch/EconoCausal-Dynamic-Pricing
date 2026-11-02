@@ -59,3 +59,42 @@ def test_empty_dataset_is_reported():
     issues = validate_pricing_data(df)
 
     assert "Dataset is empty." in issues
+
+def test_missing_values_are_reported():
+    df = make_valid_data()
+    df.loc[0, "income"] = None
+
+    issues = validate_pricing_data(df)
+
+    assert any("missing values" in issue.lower() for issue in issues)
+
+
+def test_invalid_treatment_value_is_reported():
+    df = make_valid_data()
+    df.loc[0, "treatment"] = 2
+
+    issues = validate_pricing_data(df)
+
+    assert any("treatment" in issue for issue in issues)
+
+
+def test_invalid_purchase_value_is_reported():
+    df = make_valid_data()
+    df.loc[0, "purchase"] = 3
+
+    issues = validate_pricing_data(df)
+
+    assert any("purchase" in issue for issue in issues)
+
+
+def test_boundary_discount_rates_are_accepted():
+    df = make_valid_data()
+    df.loc[0, "discount_rate"] = 0.0
+    df.loc[0, "discounted_price"] = 100.0
+    df.loc[1, "discount_rate"] = 1.0
+    df.loc[1, "discounted_price"] = 0.0
+
+    issues = validate_pricing_data(df)
+
+    assert not any("discount_rate" in issue for issue in issues)
+    assert not any("Discounted prices" in issue for issue in issues)
