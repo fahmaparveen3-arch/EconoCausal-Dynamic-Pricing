@@ -1,0 +1,8 @@
+metric,value
+control_purchase_rate,0.20647611433140117
+treated_purchase_rate,0.2837702621572944
+difference_in_means,0.07729414782589322
+difference_in_percentage_points,7.7294147825893225
+control_customers,5003.0
+treated_customers,4997.0
+total_customers,10000.0
