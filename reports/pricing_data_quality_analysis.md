@@ -94,18 +94,39 @@ The analysis follows these steps:
 
 ## 5. Validation Results
 
-The existing dataset validation script was run against the synthetic pricing dataset.
+The existing dataset validation script was tested against the synthetic pricing dataset.
 
 | Metric | Result |
 |---|---|
 | Number of records | 10,000 |
 | Number of columns | 14 |
 | Issues returned by the existing validator | 0 |
-| Unit tests for the validation module | 5 passed |
+| Total unit tests | 10 |
+| Passed tests | 10 |
+| Failed tests | 0 |
 
-The zero-issue result means that the dataset passed the checks implemented in the existing validator. The five unit tests cover valid data, missing required columns, invalid discount rates, duplicate customer IDs, and inconsistent discounted prices.
+### 5.1 Unit Test Coverage
 
-These results do not establish that every data-quality issue has been ruled out. Additional checks described in this report require their own measurements and verification.
+The validation module is covered by the following ten unit tests:
+
+1. Valid dataset produces no validation issues.
+2. Missing required columns are reported.
+3. Discount rates outside the valid range are reported.
+4. Duplicate customer IDs are reported.
+5. Inconsistent discounted prices are reported.
+6. Empty datasets are reported.
+7. Missing values in existing columns are reported.
+8. Invalid treatment values are reported.
+9. Invalid purchase values are reported.
+10. Boundary discount rates of 0 and 1 are accepted.
+
+### 5.2 Testing Outcome
+
+All ten unit tests passed successfully using pytest.
+
+The additional test cases improve coverage of missing values, binary treatment and purchase indicators, and boundary conditions for discount rates.
+
+The zero-issue validation result applies to the dataset checks implemented in the validation function. It does not establish that every possible data-quality issue has been eliminated.
 
 ## 6. Limitations
 
