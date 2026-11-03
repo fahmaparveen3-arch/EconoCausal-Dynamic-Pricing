@@ -94,7 +94,8 @@ EconoCausal-Dynamic-Pricing/
 ├── reports/
 │
 ├── tests/
-│   └── test_dynamic_pricing.py
+│   ├── test_dynamic_pricing.py
+│   └── test_compare_dml_estimators.py
 │
 ├── README.md
 ├── README_backup.md
@@ -294,8 +295,7 @@ The comparison uses the same 10,000 synthetic customers for all five candidate p
 
 ### 7.5 Repeated-Seed DML Evaluation
 
-To investigate sensitivity to train/test partitions, both DML estimators were evaluated across five random seeds:
-
+To investigate sensitivity to train/test partitions, the Difference-in-Means baseline and both DML estimators were evaluated across five random seeds:
 `42, 7, 21, 35, 99`
 
 The dataset was divided using a 75% training and 25% holdout split, stratified by treatment assignment.
@@ -305,7 +305,7 @@ Each run used:
 - 7,500 training customers.
 - 2,500 holdout customers.
 
-The same evaluation seeds and corresponding splits were used for both estimators.
+The same evaluation seeds and corresponding training and holdout splits were used for all three estimators.
 
 ### 7.6 Online Retail Price and Demand Analysis
 
@@ -497,9 +497,11 @@ The initial holdout estimate was higher than the synthetic reference ATE. This m
 
 ### 11.3 Repeated-Seed Evaluation
 
-Both DML estimators were evaluated across five random seeds.
+The Difference-in-Means baseline and both DML estimators were evaluated across five random seeds: 42, 7, 21, 35, and 99. All three estimators used identical training and holdout partitions for each seed.
 
-The recorded mean results were:
+Each run used 7,500 training customers and 2,500 holdout customers. The reference effects were calculated from the known synthetic purchase-probability model.
+
+The recorded DML results were:
 
 | Metric | LinearDML | NonParamDML |
 |---|---:|---:|
@@ -517,16 +519,17 @@ The recorded mean results were:
 
 | Estimator | Mean Absolute ATE Bias |
 |---|---:|
-| Difference-in-Means baseline | 0.016959 |
+| Difference-in-Means baseline | 0.006121 |
 | LinearDML | 0.006120 |
 | NonParamDML | 0.005975 |
 
-Both DML estimators showed lower mean absolute ATE bias than the Difference-in-Means baseline across these five evaluation runs.
+The three estimators produced very similar mean absolute ATE bias. NonParamDML had the lowest value, while LinearDML was effectively tied with the Difference-in-Means baseline at the reported precision.
 
-NonParamDML had marginally lower mean absolute ATE bias. LinearDML performed better on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation.
+LinearDML performed better on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation.
+
+The Difference-in-Means estimator estimates an aggregate treatment effect rather than individual customer effects. Therefore, individual-effect MAE, RMSE, and correlation are not applicable to this baseline and are not reported.
 
 These metrics measure different aspects of estimator performance. Lower average treatment-effect bias does not necessarily imply better individual treatment-effect predictions.
-
 ### 11.4 Seed 42 Investigation
 
 Seed 42 showed greater sensitivity than the other evaluated partitions.
@@ -550,13 +553,14 @@ This suggests sensitivity to the train/test partition and variation in observed 
 
 Automated tests are included in:
 
-`tests/test_dynamic_pricing.py`
+- `tests/test_dynamic_pricing.py`
+- `tests/test_compare_dml_estimators.py`
 
-The tests cover the dynamic-pricing functionality and related calculations.
+The tests cover dynamic-pricing functionality, Difference-in-Means baseline calculations, and DML evaluation metrics.
 
-The latest verified test result was:
+The latest previously verified test result was:
 
-**33 tests passed in 16.72 seconds.**
+**38 tests passed in 14.09 seconds.**
 
 Run the test suite from the repository root:
 
@@ -584,41 +588,46 @@ Therefore, the observed price-quantity relationships cannot automatically be int
 
 ### 13.3 Limitation 1 — Holdout ATE Bias and Repeated-Seed Sensitivity
 
-The initial holdout evaluation showed that the estimated ATE was higher than the synthetic reference ATE:
+The initial holdout evaluation showed that the LinearDML estimated ATE was higher than the synthetic reference ATE:
 
 - True ATE: 0.074861.
 - Estimated ATE: 0.092794.
 - ATE bias: +0.017932 (approximately +1.79 percentage points).
 
-To investigate whether this result was specific to one train/test partition, both DML estimators were evaluated across five random seeds: 42, 7, 21, 35, and 99.
+To investigate whether this result was specific to one train/test partition, the Difference-in-Means baseline and both DML estimators were evaluated across five random seeds: 42, 7, 21, 35, and 99.
 
 The repeated-seed evaluation produced the following mean absolute ATE bias:
 
 | Estimator | Mean Absolute ATE Bias |
 |---|---:|
-| Difference-in-Means baseline | 0.016959 |
+| Difference-in-Means baseline | 0.006121 |
 | LinearDML | 0.006120 |
 | NonParamDML | 0.005975 |
 
-Both DML estimators showed lower mean absolute ATE bias than the Difference-in-Means baseline across these five runs. NonParamDML had a marginally lower mean absolute ATE bias, while LinearDML performed better on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation.
+The three estimators produced very similar mean absolute ATE bias. NonParamDML had the lowest average value, while LinearDML was effectively tied with the Difference-in-Means baseline.
 
-**Seed 42 investigation:** The five-seed evaluation identified seed 42 as a particularly sensitive partition. Its raw treatment-group purchase-rate difference was approximately 9.07% in the training set but 3.72% in the holdout set. Both DML estimators overestimated the synthetic reference ATE on this split: LinearDML by approximately 1.79 percentage points and NonParamDML by approximately 1.60 percentage points. The other four seeds showed substantially smaller absolute ATE biases.
+LinearDML performed better than NonParamDML on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation. Individual-effect metrics are not applicable to the Difference-in-Means baseline because it estimates only an aggregate treatment effect.
 
-This result suggests sensitivity to the train/test partition and possible variation in the observed treatment-group outcomes. It does not establish overfitting or identify a definitive cause.
+**Seed 42 investigation:** Seed 42 was a particularly sensitive partition. The raw treatment-group purchase-rate difference was approximately 9.07% in the training set and 3.72% in the holdout set. The estimated ATEs were:
+
+- Difference-in-Means: 0.090660.
+- LinearDML: 0.092794.
+- NonParamDML: 0.090849.
+- Synthetic reference ATE: 0.074861.
+
+All three estimates were above the synthetic reference ATE on this split.
+
+This suggests sensitivity to the train/test partition and variation in observed treatment-group outcomes. It does not establish overfitting or identify a definitive cause.
 
 **Mitigation and further work:**
 
-The current evaluation has already compared both DML estimators with the Difference-in-Means baseline across five random seeds and reported ATE bias alongside individual-effect prediction metrics.
+- Run additional seeds to strengthen the robustness assessment.
+- Test alternative train/test partitions.
+- Investigate treatment-outcome variation across partitions.
+- Report uncertainty intervals where statistically appropriate.
+- Evaluate the estimators under alternative synthetic data-generating scenarios.
 
-Further work should include:
-
-- Running additional seeds to strengthen the robustness assessment.
-- Testing alternative train/test partitions.
-- Investigating treatment-outcome variation across partitions.
-- Reporting uncertainty intervals where statistically appropriate.
-- Evaluating the estimators under alternative synthetic data-generating scenarios.
-
-**Limitation:** These findings are based on five evaluation seeds and a synthetic pricing dataset. They provide useful diagnostic evidence but are not sufficient to establish general estimator superiority or real-world pricing effectiveness.
+**Limitation:** These findings are based on five evaluation seeds and a synthetic pricing dataset. They provide diagnostic evidence but are not sufficient to establish general estimator superiority or real-world pricing effectiveness.
 
 ### 13.4 Limitation 2 — Discount-Specific DML Accuracy and Uncertainty
 
@@ -664,7 +673,7 @@ Further work should:
 
 - Increase the number of evaluation seeds beyond five.
 - Assess confidence-interval coverage over a substantially larger number of repeated simulations.
-- Compare Difference-in-Means, LinearDML, and NonParamDML on identical splits and against the same known synthetic reference effects.
+- Evaluate all three estimators across additional random seeds and alternative synthetic data-generating scenarios.
 - Investigate both the 5% underestimation and the 15% overestimation.
 - Report ATE bias, MAE, RMSE, estimate variation, and interval coverage together.
 
@@ -692,15 +701,17 @@ The EconoCausal project demonstrates how causal inference, machine learning, and
 
 The Hillstrom randomized marketing experiment provides evidence about the effects of email campaigns on customer visits and conversions. The Online Retail dataset provides an opportunity to explore historical product sales, price variations, and demand patterns. The synthetic pricing experiment allows treatment-effect estimators and pricing policies to be evaluated against known simulation assumptions. These three components address different analytical questions and should be interpreted separately.
 
-In the synthetic pricing experiment, both LinearDML and NonParamDML showed lower mean absolute ATE bias than the Difference-in-Means baseline across five evaluation seeds. LinearDML performed better on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation, while NonParamDML showed marginally lower mean absolute ATE bias. These results indicate that estimator performance depends on the evaluation objective.
+In the synthetic pricing experiment, the mean absolute ATE bias across five evaluation seeds was 0.006121 for Difference-in-Means, 0.006120 for LinearDML, and 0.005975 for NonParamDML. These values are very close. NonParamDML had the lowest average ATE bias, while LinearDML was effectively tied with the aggregate baseline.
 
-The repeated-seed analysis also revealed sensitivity to the train/test partition, particularly for seed 42. Therefore, results from a single holdout split should not be treated as conclusive evidence of model performance. Additional evaluation across more seeds and alternative data partitions is required to assess robustness.
+LinearDML performed better than NonParamDML on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation. Individual-effect metrics are not applicable to Difference-in-Means because it estimates only an aggregate treatment effect.
+
+The repeated-seed analysis also revealed sensitivity to the train/test partition, particularly for seed 42. These results are limited to five evaluation seeds and a synthetic pricing dataset; they do not establish general estimator superiority or real-world pricing effectiveness.
 
 The synthetic dynamic-pricing comparison identified the 5% discount as the highest-profit option among the five tested policies. However, its advantage over the no-discount policy was approximately 0.53%. Since the experiment uses synthetic customer data and illustrative product-cost assumptions, this finding does not establish that a 5% discount is optimal for a real business.
 
 The Online Retail analysis did not identify a statistically significant price-quantity relationship among the five selected products or in the pooled regression. Because the data are observational and the analysis has limited product-level monthly observations, these findings should be interpreted as exploratory rather than causal evidence about price elasticity.
 
-Overall, the project provides a foundation for studying randomized marketing effects, observational product-demand patterns, synthetic causal estimation, and pricing-policy evaluation. Further work should focus on multi-treatment causal estimation, additional robustness checks, sensitivity analysis, realistic cost assumptions, and appropriate real-world validation.
+Overall, the project provides a foundation for studying randomized marketing effects, observational product-demand patterns, synthetic causal estimation, and pricing-policy evaluation. Further work should focus on additional robustness checks, sensitivity analysis, realistic cost assumptions, and appropriate real-world validation.
 
 The project demonstrates the importance of evaluating not only model predictions but also estimation error, experimental assumptions, reproducibility, and business relevance. Its current results are useful for research and educational purposes but should not be treated as validated real-world pricing recommendations.
 

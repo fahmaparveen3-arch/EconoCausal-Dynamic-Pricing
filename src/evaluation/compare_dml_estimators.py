@@ -1,5 +1,4 @@
-
-"""Compare DML estimators across multiple reproducible holdout splits."""
+"""Compare Difference-in-Means and DML estimators across five holdout splits."""
 
 from pathlib import Path
 
@@ -52,11 +51,12 @@ def true_purchase_probability(df, discount):
     )
 
     log_odds = baseline_log_odds + discount_sensitivity * discount
+
     return 1 / (1 + np.exp(-log_odds))
 
 
 def true_average_effect(df):
-    """Average true effect of the four tested discounts versus 0%."""
+    """Calculate each customer's true average effect across four discounts."""
     control_probability = true_purchase_probability(df, 0.0)
 
     effects = [
@@ -67,7 +67,66 @@ def true_average_effect(df):
     return np.mean(np.column_stack(effects), axis=1)
 
 
+def estimate_difference_in_means(train_df):
+    """Estimate the average treatment effect using training data only."""
+    if train_df.empty:
+        raise ValueError("Training data cannot be empty.")
+
+    required = ["treatment", "purchase"]
+    missing = [column for column in required if column not in train_df.columns]
+
+    if missing:
+        raise ValueError(
+            f"Training data is missing required columns: {missing}"
+        )
+
+    if train_df[required].isnull().any().any():
+        raise ValueError(
+            "Treatment and purchase cannot contain missing values."
+        )
+
+    if set(train_df["treatment"].unique()) != {0, 1}:
+        raise ValueError(
+            "Both treatment and control groups are required."
+        )
+
+    if not set(train_df["purchase"].unique()).issubset({0, 1}):
+        raise ValueError("Purchase must contain only 0 and 1.")
+
+    treatment_groups = train_df.groupby("treatment")["purchase"].mean()
+
+    return float(treatment_groups.loc[1] - treatment_groups.loc[0])
+
+
+def calculate_baseline_metrics(train_df, truth):
+    """
+    Evaluate the Difference-in-Means ATE against holdout ground truth.
+
+    Difference-in-Means estimates an average effect, not individual
+    customer effects. Therefore individual-effect metrics are not calculated.
+    """
+    truth = np.asarray(truth, dtype=float)
+
+    if truth.size == 0 or not np.isfinite(truth).all():
+        raise ValueError("Holdout ground truth must contain finite values.")
+
+    estimated_ate = estimate_difference_in_means(train_df)
+    true_ate = float(np.mean(truth))
+    ate_bias = estimated_ate - true_ate
+
+    return {
+        "true_ate": true_ate,
+        "estimated_ate": estimated_ate,
+        "ate_bias": ate_bias,
+        "absolute_ate_bias": abs(ate_bias),
+        "mae": np.nan,
+        "rmse": np.nan,
+        "effect_correlation": np.nan,
+    }
+
+
 def make_preprocessor():
+    """Create the feature preprocessing pipeline."""
     return ColumnTransformer(
         transformers=[
             (
@@ -103,7 +162,19 @@ def make_first_stage_models(seed):
 
 
 def calculate_metrics(truth, estimates):
-    """Calculate holdout metrics, handling undefined correlation."""
+    """Calculate DML holdout metrics."""
+    truth = np.asarray(truth, dtype=float)
+    estimates = np.asarray(estimates, dtype=float)
+
+    if len(truth) != len(estimates):
+        raise ValueError("Truth and estimates must have equal lengths.")
+
+    if len(truth) == 0:
+        raise ValueError("Truth and estimates cannot be empty.")
+
+    if not np.isfinite(truth).all() or not np.isfinite(estimates).all():
+        raise ValueError("Truth and estimates must contain finite values.")
+
     errors = estimates - truth
 
     if np.std(truth) == 0 or np.std(estimates) == 0:
@@ -111,27 +182,29 @@ def calculate_metrics(truth, estimates):
     else:
         correlation = float(np.corrcoef(truth, estimates)[0, 1])
 
+    ate_bias = float(np.mean(errors))
+
     return {
         "true_ate": float(np.mean(truth)),
         "estimated_ate": float(np.mean(estimates)),
-        "ate_bias": float(np.mean(errors)),
+        "ate_bias": ate_bias,
+        "absolute_ate_bias": abs(ate_bias),
         "mae": float(np.mean(np.abs(errors))),
         "rmse": float(np.sqrt(np.mean(errors**2))),
         "effect_correlation": correlation,
     }
 
 
-def main():
-    if not DATA_FILE.exists():
-        raise FileNotFoundError(f"Dataset not found: {DATA_FILE}")
-
-    df = pd.read_csv(DATA_FILE)
-
+def validate_dataset(df):
+    """Validate the prepared pricing dataset."""
     required = FEATURES + ["customer_id", "treatment", "purchase"]
+
     missing = [column for column in required if column not in df.columns]
 
     if missing:
-        raise ValueError(f"Dataset is missing required columns: {missing}")
+        raise ValueError(
+            f"Dataset is missing required columns: {missing}"
+        )
 
     if df.empty or df[required].isnull().any().any():
         raise ValueError(
@@ -147,6 +220,15 @@ def main():
     if set(df["purchase"].unique()) != {0, 1}:
         raise ValueError("Purchase must contain both 0 and 1.")
 
+
+def main():
+    if not DATA_FILE.exists():
+        raise FileNotFoundError(f"Dataset not found: {DATA_FILE}")
+
+    df = pd.read_csv(DATA_FILE)
+
+    validate_dataset(df)
+
     run_rows = []
 
     for seed in SEEDS:
@@ -159,6 +241,31 @@ def main():
             stratify=df["treatment"],
         )
 
+        # Calculate the synthetic reference effects for holdout customers.
+        truth = true_average_effect(test_df)
+
+        # ---------------------------------------------------------
+        # 1. Difference-in-Means baseline
+        # ---------------------------------------------------------
+        print("  Evaluating Difference-in-Means baseline...")
+
+        baseline_metrics = calculate_baseline_metrics(
+            train_df,
+            truth,
+        )
+
+        run_rows.append(
+            {
+                "seed": seed,
+                "estimator": "Difference-in-Means",
+                "holdout_customers": len(test_df),
+                **baseline_metrics,
+            }
+        )
+
+        # ---------------------------------------------------------
+        # 2. Prepare features for DML estimators
+        # ---------------------------------------------------------
         preprocessor = make_preprocessor()
 
         X_train = np.asarray(
@@ -174,6 +281,9 @@ def main():
         y_train = train_df["purchase"].to_numpy(dtype=float)
         t_train = train_df["treatment"].to_numpy(dtype=int)
 
+        # ---------------------------------------------------------
+        # 3. DML estimators
+        # ---------------------------------------------------------
         estimators = {
             "LinearDML": LinearDML(
                 **make_first_stage_models(seed),
@@ -196,8 +306,6 @@ def main():
                 random_state=seed,
             ),
         }
-
-        truth = true_average_effect(test_df)
 
         for name, estimator in estimators.items():
             print(f"  Fitting {name}...")
@@ -229,17 +337,24 @@ def main():
                 }
             )
 
+    # ---------------------------------------------------------
+    # 4. Create detailed results
+    # ---------------------------------------------------------
     run_results = pd.DataFrame(run_rows)
 
     metric_columns = [
         "true_ate",
         "estimated_ate",
         "ate_bias",
+        "absolute_ate_bias",
         "mae",
         "rmse",
         "effect_correlation",
     ]
 
+    # ---------------------------------------------------------
+    # 5. Create repeated-seed summary
+    # ---------------------------------------------------------
     summary_rows = []
 
     for name, group in run_results.groupby("estimator", sort=False):
@@ -259,7 +374,9 @@ def main():
 
     summary = pd.DataFrame(summary_rows)
 
-    # Save both detailed run results and the existing summary report.
+    # ---------------------------------------------------------
+    # 6. Save reports
+    # ---------------------------------------------------------
     REPORT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     run_results.to_csv(RUN_RESULTS_FILE, index=False)
