@@ -44,47 +44,65 @@ The main objectives are to:
 
 ## 4. Project Structure
 
-The repository is organised into data-processing, pricing, evaluation, testing, notebook, and reporting components.
+The repository is organised into data-processing, pricing, modelling, evaluation, testing, notebook, and reporting components.
+
+The following tree shows the principal source files and directories inspected in the repository. It is a simplified view and does not list every dataset, notebook, backup, cache, or generated file.
 
 ```text
 EconoCausal-Dynamic-Pricing/
 │
 ├── data/
-│   ├── raw/
+│   ├── hillstrom.csv
+│   ├── prepared_pricing.csv
+│   ├── synthetic_pricing.csv
+│   ├── online+retail/
 │   └── processed/
+│       ├── online_retail_cleaned.csv
+│       ├── online_retail_product_sales.csv
+│       ├── online_retail_excluded.csv
+│       ├── online_retail_fully_reversed_audit.csv
+│       ├── online_retail_non_product_audit.csv
+│       └── online_retail_returns_cancellations.csv
 │
 ├── notebooks/
-│   └── hillstrom_eda.ipynb
 │
 ├── src/
 │   ├── data_processing/
-│   │   └── generate_synthetic_pricing_data.py
+│   │   ├── clean_data.py
+│   │   ├── generate_synthetic_pricing_data.py
+│   │   ├── load_data.py
+│   │   ├── load_pricing_data.py
+│   │   ├── prepare_pricing_data.py
+│   │   └── preprocess_online_retail.py
+│   │
+│   ├── models/
+│   │   ├── train_dml.py
+│   │   └── train_uplift.py
 │   │
 │   ├── pricing/
 │   │   └── dynamic_pricing.py
 │   │
 │   └── evaluation/
+│       ├── compare_discount_causal_effects.py
 │       ├── compare_dml_estimators.py
-│       └── compare_pricing_policies.py
+│       ├── compare_pricing_policies.py
+│       ├── evaluate_pricing_profit.py
+│       ├── evaluate_uplift.py
+│       ├── validate_dml_against_truth.py
+│       └── validate_dml_holdout.py
 │
 ├── reports/
-│   ├── dml_customer_effects.csv
-│   ├── dml_estimator_comparison.csv
-│   ├── dml_estimator_repeated_seed_results.csv
-│   ├── dml_estimator_repeated_seed_summary.csv
-│   ├── dml_holdout_validation.csv
-│   ├── dml_truth_validation.csv
-│   ├── pricing_policy_comparison.csv
-│   └── pricing_profit_evaluation.csv
 │
 ├── tests/
 │   └── test_dynamic_pricing.py
 │
 ├── README.md
-└── requirements.txt
+├── README_backup.md
+├── requirements.txt
+└── update_online_retail_notebook.py
 ```
 
-This tree shows the principal project files and reports. Additional files, notebooks, and data files may also exist in the repository.
+The `reports/` directory contains generated evaluation results and pricing-policy reports. The `notebooks/` directory contains the project's exploratory analysis notebooks.
 
 ## 5. Datasets
 
@@ -127,7 +145,7 @@ Earlier analysis recorded the following results:
 | Uplift model PR-AUC | 0.0103 |
 | Reported predicted uplift | 0.632 percentage points |
 
-These are results from the earlier marketing-analysis stage and should be reproduced from the project files before final submission.
+These results are from the earlier marketing-analysis stage and should be reproduced from the project files before final submission.
 
 ### 5.2 UCI Online Retail Dataset
 
@@ -185,31 +203,26 @@ The marketing analysis used the Men's E-Mail and No E-Mail groups for the princi
 
 The Online Retail data required cleaning before product-level analysis.
 
-The recorded preprocessing counts were:
+The verified row counts for the original and currently available processed files are:
 
-| Preprocessing Stage | Rows |
+| Dataset Stage | Verified Rows |
 |---|---:|
 | Original dataset | 541,909 |
-| After duplicate removal | 536,641 |
-| Cancellation records | 9,251 |
-| Fully reversed audit records | 1,206 |
-| Fully reversed original sales removed | 603 |
-| Return records | 1,336 |
-| Invalid sales excluded | 1,176 |
-| Clean sales records | 524,275 |
-| Product sales records | 521,917 |
-| Non-product records | 2,358 |
+| Cleaned dataset | 524,110 |
+| Product-sales dataset | 521,755 |
+| Excluded dataset | 1,176 |
 
 The cleaned product-sales dataset was checked for duplicate records, missing product descriptions, invalid quantities, invalid prices, and revenue inconsistencies.
 
-Recorded validation results:
+Previously recorded validation results included:
 
-- Product sales records: 521,917.
-- Duplicate rows: 0.
-- Missing product descriptions: 0.
-- Invalid quantity or price records: 0.
-- Revenue discrepancies: 0.
-- CustomerID missingness: approximately 25.2%.
+- No duplicate rows in the product-sales dataset.
+- No missing product descriptions.
+- No invalid quantity or price records.
+- No revenue discrepancies.
+- CustomerID missingness of approximately 25.2%.
+
+The current verified product-sales count is **521,755 records**. Earlier documentation contained a different count; the verified processed CSV row count is used in this README.
 
 ### 6.3 Synthetic Pricing Data
 
@@ -365,6 +378,12 @@ pip install -r requirements.txt
 
 The project was also developed and tested in a Python 3.13.16 environment named `.venv313`.
 
+For the environment used during the latest test run, activate it in PowerShell with:
+
+```powershell
+.\.venv313\Scripts\Activate.ps1
+```
+
 ## 9. Running the Project
 
 Run project commands from the repository root.
@@ -384,7 +403,7 @@ python -m src.evaluation.compare_pricing_policies
 ### 9.3 Run Automated Tests
 
 ```bash
-pytest
+python -m pytest -q
 ```
 
 ### 9.4 Compare DML Estimators Across Repeated Seeds
@@ -406,15 +425,17 @@ The single-split estimator comparison report contains previously generated resul
 
 The Online Retail preprocessing workflow is part of the project's data-preparation stage.
 
-The exact script name and execution command should be documented here after verifying the preprocessing file in the repository.
+The preprocessing source file inspected in the repository is:
+
+`src/data_processing/preprocess_online_retail.py`
+
+The exact execution command and its input/output requirements should be confirmed against the script before being presented as a verified command.
 
 ### 9.6 Run Hillstrom Analysis
 
-The Hillstrom exploratory analysis is available in the project notebook:
+The Hillstrom exploratory analysis is available in the project's notebooks directory.
 
-`notebooks/hillstrom_eda.ipynb`
-
-Open and run the notebook in Jupyter or VS Code after placing the dataset in the expected data location.
+Open the relevant Hillstrom notebook in Jupyter or VS Code after placing the dataset in the expected data location.
 
 ## 10. Pricing-Policy Results
 
@@ -533,17 +554,17 @@ Automated tests are included in:
 
 The tests cover the dynamic-pricing functionality and related calculations.
 
-The last recorded test result was:
+The latest verified test result was:
 
-**26 tests passed.**
+**33 tests passed in 16.72 seconds.**
 
-This is the previously recorded result and should be confirmed by running the full test suite again before final submission.
-
-Run:
+Run the test suite from the repository root:
 
 ```bash
-pytest
+python -m pytest -q
 ```
+
+This is the latest observed result. The test suite should be run again before final submission to confirm that it still passes after any subsequent code changes.
 
 ## 13. Limitations and Critical Analysis
 
@@ -561,7 +582,7 @@ Price and quantity may be affected by product characteristics, promotions, seaso
 
 Therefore, the observed price-quantity relationships cannot automatically be interpreted as causal price effects.
 
-### 13.3 Holdout ATE Bias and Repeated-Seed Sensitivity
+### 13.3 Limitation 1 — Holdout ATE Bias and Repeated-Seed Sensitivity
 
 The initial holdout evaluation showed that the estimated ATE was higher than the synthetic reference ATE:
 
@@ -599,7 +620,57 @@ Further work should include:
 
 **Limitation:** These findings are based on five evaluation seeds and a synthetic pricing dataset. They provide useful diagnostic evidence but are not sufficient to establish general estimator superiority or real-world pricing effectiveness.
 
-### 13.4 Pricing-Policy Limitations
+### 13.4 Limitation 2 — Discount-Specific DML Accuracy and Uncertainty
+
+A separate evaluation investigated how accurately LinearDML estimates the average treatment effect (ATE) for each tested discount relative to the 0% control group. This analysis is distinct from the overall comparison of LinearDML and NonParamDML reported in Section 11.
+
+The evaluation used four treatment levels (5%, 10%, 15%, and 20%), five train/test split seeds (42, 7, 21, 35, and 99), and a 75%/25% split stratified by treatment assignment. Each holdout set contained 2,500 customers. LinearDML was fitted with statsmodels inference to obtain 95% ATE intervals.
+
+**Repeated-seed results**
+
+| Discount | Mean true ATE | Mean estimated ATE | Estimate SD | Mean bias | Mean absolute bias | Mean MAE | Mean RMSE | Observed CI coverage |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 5% | 0.027647 | 0.009520 | 0.008459 | -0.018127 | 0.018127 | 0.038168 | 0.046460 | 5/5 |
+| 10% | 0.057656 | 0.059872 | 0.008990 | +0.002216 | 0.007450 | 0.029721 | 0.037043 | 5/5 |
+| 15% | 0.089559 | 0.105017 | 0.016462 | +0.015457 | 0.018848 | 0.043248 | 0.052736 | 5/5 |
+| 20% | 0.123613 | 0.135066 | 0.003993 | +0.011453 | 0.011453 | 0.024044 | 0.031343 | 5/5 |
+
+ATE values and biases in this table are proportions; multiply by 100 to express them as percentage points. For example, a bias of 0.015457 corresponds to approximately +1.55 percentage points.
+
+The 15% estimate varied most across the five splits (ATE standard deviation 0.016462) and had the largest mean absolute ATE bias (0.018848) among the four discount levels. The 5% estimate also showed meaningful underestimation (mean bias -0.018127). Therefore, the discrepancy is not limited to the 15% treatment level.
+
+For the 15% discount, the seed-level estimated ATEs were 0.120653, 0.113216, 0.096697, 0.080189, and 0.114329. Four of the five estimates were above the corresponding synthetic reference effect, while one was below it. This indicates sensitivity to the selected split; it does not by itself establish overfitting or identify a single cause.
+
+All five calculated 95% intervals contained the reference ATE for each discount in this evaluation. This is an observed result for five runs per discount, not evidence that the intervals have proven 95% coverage. A larger simulation study is required to assess interval coverage reliably.
+
+**Nuisance-model and sample-size diagnostics**
+
+The treatment model's ROC-AUC was approximately 0.500 for every discount. Because treatment assignment was randomized in the synthetic generator, a treatment-model score near 0.5 is expected and should not be interpreted as evidence of a failed treatment model.
+
+| Discount | Outcome-model RMSE | Outcome-model R² | Treatment ROC-AUC |
+|---:|---:|---:|---:|
+| 5% | 0.408579 | 0.046232 | 0.500 |
+| 10% | 0.414323 | 0.044018 | 0.500 |
+| 15% | 0.421426 | 0.045473 | 0.500 |
+| 20% | 0.426260 | 0.052118 | 0.500 |
+
+The outcome-model R² values were modest and similar across the four discount levels. The 15% outcome RMSE was somewhat higher, but its R² was not materially different from the other groups. The discount-specific treatment-arm sample sizes were also not smallest at 15%; therefore, the diagnostics do not support attributing the 15% discrepancy simply to a uniquely small treatment group.
+
+**Interpretation and next steps**
+
+These results provide a more detailed diagnostic of discount-specific ATE estimation than a single holdout split. They suggest that estimated effects can vary by discount level and train/test partition, and that average-effect accuracy and individual-effect prediction accuracy should be considered separately.
+
+Further work should:
+
+- Increase the number of evaluation seeds beyond five.
+- Assess confidence-interval coverage over a substantially larger number of repeated simulations.
+- Compare Difference-in-Means, LinearDML, and NonParamDML on identical splits and against the same known synthetic reference effects.
+- Investigate both the 5% underestimation and the 15% overestimation.
+- Report ATE bias, MAE, RMSE, estimate variation, and interval coverage together.
+
+The discount-specific repeated-seed results are diagnostic evidence from a synthetic experiment. They do not establish real-world pricing effects or prove general estimator superiority.
+
+### 13.5 Pricing-Policy Limitations
 
 The 5% discount produced the highest expected profit among the five tested policies, but the improvement over no discount was only approximately 0.53%.
 
@@ -607,7 +678,7 @@ The comparison depends on the synthetic purchase-probability model and illustrat
 
 Additional validation is required before making any real-world pricing recommendation.
 
-### 13.5 Generalisation and Reproducibility
+### 13.6 Generalisation and Reproducibility
 
 The results are dependent on the selected datasets, modelling assumptions, and evaluation partitions.
 
@@ -645,9 +716,9 @@ The project demonstrates the importance of evaluating not only model predictions
 
 ### Phase 2 — Robustness and Validation
 
-- Extend the existing five-seed evaluation using additional random seeds and alternative data partitions.
+- Extend the overall and discount-specific five-seed evaluations using additional random seeds and alternative data partitions.
 - Investigate treatment-effect estimation stability.
-- Add uncertainty intervals where statistically appropriate.
+- Extend uncertainty-interval evaluation and assess interval coverage over more repeated simulations.
 - Test alternative synthetic data-generating scenarios.
 - Improve the validation of individual treatment-effect estimates.
 

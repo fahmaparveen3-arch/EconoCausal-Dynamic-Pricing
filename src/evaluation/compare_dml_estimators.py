@@ -18,7 +18,14 @@ from sklearn.preprocessing import OneHotEncoder
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_FILE = ROOT / "data" / "prepared_pricing.csv"
-REPORT_FILE = ROOT / "reports" / "dml_estimator_repeated_seed_summary.csv"
+
+REPORT_FILE = (
+    ROOT / "reports" / "dml_estimator_repeated_seed_summary.csv"
+)
+
+RUN_RESULTS_FILE = (
+    ROOT / "reports" / "dml_estimator_repeated_seed_results.csv"
+)
 
 FEATURES = ["age", "income", "past_purchases", "product_category"]
 DISCOUNTS = [0.05, 0.10, 0.15, 0.20]
@@ -153,11 +160,15 @@ def main():
         )
 
         preprocessor = make_preprocessor()
+
         X_train = np.asarray(
-            preprocessor.fit_transform(train_df[FEATURES]), dtype=float
+            preprocessor.fit_transform(train_df[FEATURES]),
+            dtype=float,
         )
+
         X_test = np.asarray(
-            preprocessor.transform(test_df[FEATURES]), dtype=float
+            preprocessor.transform(test_df[FEATURES]),
+            dtype=float,
         )
 
         y_train = train_df["purchase"].to_numpy(dtype=float)
@@ -198,7 +209,9 @@ def main():
                 inference=None,
             )
 
-            estimates = np.asarray(estimator.effect(X_test)).reshape(-1)
+            estimates = np.asarray(
+                estimator.effect(X_test)
+            ).reshape(-1)
 
             if not np.isfinite(estimates).all():
                 raise ValueError(
@@ -246,12 +259,25 @@ def main():
 
     summary = pd.DataFrame(summary_rows)
 
+    # Save both detailed run results and the existing summary report.
     REPORT_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    run_results.to_csv(RUN_RESULTS_FILE, index=False)
     summary.to_csv(REPORT_FILE, index=False)
 
+    print("\nIndividual seed-level results:")
+    print(run_results.to_string(index=False))
+
     print("\nRepeated-seed estimator summary:")
-    print(summary.to_string(index=False, float_format=lambda value: f"{value:.6f}"))
-    print(f"\nSaved summary report to: {REPORT_FILE}")
+    print(
+        summary.to_string(
+            index=False,
+            float_format=lambda value: f"{value:.6f}",
+        )
+    )
+
+    print(f"\nSaved individual results to: {RUN_RESULTS_FILE}")
+    print(f"Saved summary report to: {REPORT_FILE}")
 
 
 if __name__ == "__main__":
