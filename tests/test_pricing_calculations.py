@@ -76,7 +76,24 @@ class TestPricingCalculations(unittest.TestCase):
 
         self.assertFalse(result)
         self.assertIn("Missing required columns", output)
+    
+    def test_missing_dataset_file_is_detected(self):
+        missing_path = Path(self.temp_dir.name) / "missing.csv"
 
+        with redirect_stdout(io.StringIO()) as output:
+            result = validate_pricing_calculations(missing_path)
+
+        self.assertFalse(result)
+        self.assertIn("Dataset not found", output.getvalue())
+
+    def test_empty_dataset_is_detected(self):
+        empty_data = pd.DataFrame(columns=self.valid_data.columns)
+        empty_data.to_csv(self.csv_path, index=False)
+
+        result, output = self.run_validator()
+
+        self.assertFalse(result)
+        self.assertIn("Dataset is empty", output)
 
 if __name__ == "__main__":
     unittest.main()
