@@ -15,7 +15,6 @@ from sklearn.model_selection import train_test_split
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_FILE = PROJECT_ROOT / "data" / "prepared_pricing.csv"
 OUTPUT_FILE = PROJECT_ROOT / "reports" / "dml_customer_effects.csv"
-
 FEATURE_COLUMNS = [
     "age",
     "income",
@@ -168,7 +167,7 @@ def fit_dml_model(df):
 
     return model, results
 
-def evaluate_dml_holdout(df, test_size=0.25):
+def evaluate_dml_holdout(df, test_size=0.25, random_state=42):
     """Evaluate DML effects on customers excluded from model fitting."""
 
     validate_dml_data(df)
@@ -176,7 +175,7 @@ def evaluate_dml_holdout(df, test_size=0.25):
     train_df, test_df = train_test_split(
         df,
         test_size=test_size,
-        random_state=42,
+        random_state=random_state,
         stratify=df["treatment"],
     )
 
@@ -203,19 +202,19 @@ def evaluate_dml_holdout(df, test_size=0.25):
         model_y=RandomForestRegressor(
             n_estimators=100,
             min_samples_leaf=20,
-            random_state=42,
+            random_state=random_state,
             n_jobs=-1,
         ),
         model_t=RandomForestClassifier(
             n_estimators=100,
             min_samples_leaf=20,
-            random_state=42,
+            random_state=random_state,
             n_jobs=-1,
         ),
         discrete_treatment=True,
         fit_cate_intercept=True,
         cv=3,
-        random_state=42,
+        random_state=random_state,
     )
 
     model.fit(
@@ -236,8 +235,6 @@ def evaluate_dml_holdout(df, test_size=0.25):
         "customer_id": test_df["customer_id"].to_numpy(),
         "estimated_discount_effect": test_effects,
     })
-
-
 
 def train_dml_model():
     """Load data, fit DML, and save customer-level effects."""

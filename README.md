@@ -645,6 +645,118 @@ The estimates were close to the training-set raw treatment difference, while the
 
 This suggests sensitivity to the train/test partition and variation in observed treatment-group outcomes. It does not establish overfitting or identify a definitive cause.
 
+### 11.5 Train/Test Split-Ratio Validation
+
+To investigate the sensitivity of DML estimates to different training and holdout sample sizes, three train/test split ratios were evaluated: 70/30, 75/25, and 80/20.
+
+The experiment used the synthetic pricing dataset, random seed 42, and stratified treatment assignment for all three configurations.
+
+**Validation Results**
+
+| Metric | 70/30 | 75/25 | 80/20 |
+|---|---:|---:|---:|
+| Training customers | 7,000 | 7,500 | 8,000 |
+| Holdout customers | 3,000 | 2,500 | 2,000 |
+| True ATE | 0.074993 | 0.074861 | 0.074851 |
+| Estimated ATE | 0.091989 | 0.092794 | 0.084694 |
+| Absolute ATE bias | 0.016996 | 0.017932 | 0.009843 |
+| MAE | 0.027921 | 0.020994 | 0.016179 |
+| RMSE | 0.030298 | 0.024203 | 0.019871 |
+
+**Interpretation**
+
+The 80/20 configuration produced the lowest absolute ATE bias, MAE, and RMSE among the three tested configurations. The 75/25 configuration performed better than 70/30 on MAE and RMSE, while the 70/30 configuration had the largest individual-effect prediction errors.
+
+All three configurations overestimated the synthetic reference ATE.
+
+These findings indicate that the training and holdout sample allocation can influence treatment-effect estimates and individual-effect prediction errors.
+
+**Limitation:** This initial comparison used one random seed (42). Therefore, the results do not establish that 80/20 is universally optimal. Additional repeated-seed evaluation is required to determine whether the observed differences remain consistent across alternative partitions.
+
+**Evaluation script:** `src/evaluation/validate_dml_split_ratios.py`
+
+**Generated report:** `reports/dml_split_ratio_validation.csv`
+
+### 11.6 Repeated-Seed Train/Test Split-Ratio Validation
+
+To evaluate the stability of DML performance across different training and holdout sample allocations, three split ratios were tested: 70/30, 75/25, and 80/20.
+
+Each split ratio was evaluated using five random seeds: 42, 7, 21, 35, and 99. LinearDML was trained using the same model configuration across all experiments, with preprocessing fitted only on training data.
+
+A total of 15 experiments were completed.
+
+**Repeated-Seed Validation Results**
+
+| Metric (Mean Across 5 Seeds) | 70/30 | 75/25 | 80/20 |
+|---|---:|---:|---:|
+| Absolute ATE Bias | 0.008115 | 0.006120 | 0.004011 |
+| MAE | 0.021871 | 0.018963 | 0.018335 |
+| RMSE | 0.026420 | 0.023124 | 0.022395 |
+| Effect Correlation | 0.606872 | 0.617833 | 0.587684 |
+
+**Interpretation**
+
+The 80/20 split achieved the lowest mean absolute ATE bias, MAE, and RMSE among the tested configurations. The 75/25 split achieved the highest mean effect correlation.
+
+The 80/20 split also showed the lowest standard deviation in absolute ATE bias (0.003564), indicating greater consistency in ATE estimation across the five tested seeds.
+
+All three configurations produced positive mean ATE bias, indicating slight overestimation of the synthetic reference effect.
+
+These findings suggest that an 80/20 split provides the strongest overall performance among the configurations evaluated. However, the results do not establish that it is universally optimal.
+
+**Limitation:** The experiment used five random seeds on one synthetic dataset. Further validation on additional datasets and alternative model configurations would strengthen the findings.
+
+**Evaluation script:** `src/evaluation/validate_dml_repeated_split_ratios.py`
+
+**Individual results:** `reports/dml_repeated_split_ratios_results.csv`
+
+**Summary report:** `reports/dml_repeated_split_ratios_summary.csv`
+
+
+### 11.7 Repeated-Seed Holdout Validation Against Synthetic Ground Truth
+
+To address the limitation of in-sample validation, an independent holdout validation was performed using `evaluate_dml_holdout()`.
+
+LinearDML was evaluated using five random seeds: 42, 7, 21, 35, and 99. Each experiment used a 75/25 train-test split, resulting in 2,500 holdout customers per run.
+
+The synthetic ground-truth treatment effects were calculated using the known purchase-probability formula. The benchmark incorporated the actual discount distribution among treated customers:
+
+| Discount Level | Actual Proportion |
+|---|---:|
+| 5% | 25.14% |
+| 10% | 24.69% |
+| 15% | 25.86% |
+| 20% | 24.31% |
+
+**Repeated-Seed Holdout Results**
+
+| Metric | Mean | Standard Deviation |
+|---|---:|---:|
+| True ATE | 0.074285 | 0.000211 |
+| Estimated ATE | 0.078459 | 0.008678 |
+| ATE Bias | 0.004174 | 0.008500 |
+| Absolute ATE Bias | 0.006164 | 0.006822 |
+| MAE | 0.018969 | 0.002112 |
+| RMSE | 0.023148 | 0.002122 |
+| Effect Correlation | 0.617850 | 0.138233 |
+
+**Interpretation**
+
+The model slightly overestimated the average treatment effect across the five experiments. The mean absolute ATE bias was 0.006164.
+
+The effect correlation ranged from 0.418135 to 0.804518, indicating variation in customer-level treatment-effect prediction across different holdout samples.
+
+The results demonstrate that average treatment-effect estimation is reasonably consistent, although individual treatment-effect predictions remain sensitive to the validation split.
+
+**Limitation:** The validation uses one synthetic dataset and five random seeds. Its findings should not be interpreted as proof of generalisation to real-world pricing data.
+
+**Evaluation script:** `src/evaluation/validate_dml_against_truth.py`
+
+**Individual results:** `reports/dml_truth_repeated_seed_results.csv`
+
+**Summary report:** `reports/dml_truth_repeated_seed_summary.csv`
+
+
 ## 12. Automated Tests
 
 Automated tests are included in:
