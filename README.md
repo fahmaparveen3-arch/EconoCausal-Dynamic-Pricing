@@ -65,6 +65,8 @@ EconoCausal-Dynamic-Pricing/
 │       └── online_retail_returns_cancellations.csv
 │
 ├── notebooks/
+│   ├── 01_hillstrom_eda.ipynb
+│   └── 02_online_retail_eda.ipynb
 │
 ├── src/
 │   ├── data_processing/
@@ -142,11 +144,19 @@ Earlier analysis recorded the following results:
 |---|---:|
 | Men's email vs. no email — conversion effect | +0.681 percentage points |
 | Women's email vs. no email — conversion effect | +0.311 percentage points |
-| Uplift model ROC-AUC | 0.5490 |
-| Uplift model PR-AUC | 0.0103 |
+| Baseline conversion model ROC-AUC | 0.5490 |
+| Baseline conversion model PR-AUC | 0.0103 |
 | Reported predicted uplift | 0.632 percentage points |
 
 These results are from the earlier marketing-analysis stage and should be reproduced from the project files before final submission.
+
+The expected dataset location is:
+
+```text
+data/hillstrom.csv
+```
+
+Place the Hillstrom CSV file at this location before running the Hillstrom notebook.
 
 ### 5.2 UCI Online Retail Dataset
 
@@ -162,6 +172,12 @@ It is used for exploratory analysis of:
 - Relationships between price and quantity.
 
 **Dataset source:** [UCI Machine Learning Repository — Online Retail](https://archive.ics.uci.edu/dataset/352/online+retail)
+
+The original Excel dataset is expected at:
+
+```text
+data/online+retail/Online Retail.xlsx
+```
 
 This dataset is observational. Relationships found between prices and quantities should not automatically be interpreted as causal price effects.
 
@@ -296,6 +312,7 @@ The comparison uses the same 10,000 synthetic customers for all five candidate p
 ### 7.5 Repeated-Seed DML Evaluation
 
 To investigate sensitivity to train/test partitions, the Difference-in-Means baseline and both DML estimators were evaluated across five random seeds:
+
 `42, 7, 21, 35, 99`
 
 The dataset was divided using a 75% training and 25% holdout split, stratified by treatment assignment.
@@ -356,32 +373,55 @@ git clone https://github.com/fahmaparveen3-arch/EconoCausal-Dynamic-Pricing.git
 cd EconoCausal-Dynamic-Pricing
 ```
 
-### 8.3 Create a Virtual Environment
+### 8.3 Python Version
 
-```bash
+The project was developed and tested in a Python 3.13.16 environment.
+
+Python 3.13 is used for the current project environment.
+
+### 8.4 Create a Virtual Environment
+
+On Windows PowerShell:
+
+```powershell
 python -m venv .venv
 ```
 
-### 8.4 Activate the Virtual Environment
+### 8.5 Activate the Virtual Environment
 
-Windows PowerShell:
+On Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-### 8.5 Install Dependencies
+If PowerShell prevents activation, use the following command in the current terminal session:
 
-```bash
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+Then activate the environment again.
+
+### 8.6 Install Dependencies
+
+```powershell
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-The project was also developed and tested in a Python 3.13.16 environment named `.venv313`.
+The project was also developed and tested in an environment named `.venv313`.
 
-For the environment used during the latest test run, activate it in PowerShell with:
+To activate that existing environment on the development machine, use:
 
 ```powershell
 .\.venv313\Scripts\Activate.ps1
+```
+
+Alternatively, commands can be run directly using:
+
+```powershell
+.\.venv313\Scripts\python.exe
 ```
 
 ## 9. Running the Project
@@ -390,19 +430,19 @@ Run project commands from the repository root.
 
 ### 9.1 Generate Synthetic Pricing Data
 
-```bash
+```powershell
 python -m src.data_processing.generate_synthetic_pricing_data
 ```
 
 ### 9.2 Compare Pricing Policies
 
-```bash
+```powershell
 python -m src.evaluation.compare_pricing_policies
 ```
 
 ### 9.3 Run Automated Tests
 
-```bash
+```powershell
 python -m pytest -q
 ```
 
@@ -410,7 +450,7 @@ python -m pytest -q
 
 Run from the project root:
 
-```bash
+```powershell
 python -m src.evaluation.compare_dml_estimators
 ```
 
@@ -425,17 +465,72 @@ The single-split estimator comparison report contains previously generated resul
 
 The Online Retail preprocessing workflow is part of the project's data-preparation stage.
 
-The preprocessing source file inspected in the repository is:
+The preprocessing source file is:
 
-`src/data_processing/preprocess_online_retail.py`
+```text
+src/data_processing/preprocess_online_retail.py
+```
 
-The exact execution command and its input/output requirements should be confirmed against the script before being presented as a verified command.
+Before running the script, ensure the original Excel dataset is located at:
+
+```text
+data/online+retail/Online Retail.xlsx
+```
+
+Run the preprocessing command from the repository root:
+
+```powershell
+python -m src.data_processing.preprocess_online_retail
+```
+
+The verified preprocessing run produced the following files in `data/processed/`:
+
+- `online_retail_cleaned.csv`
+- `online_retail_product_sales.csv`
+- `online_retail_non_product_audit.csv`
+- `online_retail_returns_cancellations.csv`
+- `online_retail_excluded.csv`
+- `online_retail_fully_reversed_audit.csv`
+
+The verified product-sales dataset contains 521,755 records.
 
 ### 9.6 Run Hillstrom Analysis
 
-The Hillstrom exploratory analysis is available in the project's notebooks directory.
+The Hillstrom exploratory analysis is available in:
 
-Open the relevant Hillstrom notebook in Jupyter or VS Code after placing the dataset in the expected data location.
+```text
+notebooks/01_hillstrom_eda.ipynb
+```
+
+Ensure the dataset is placed at:
+
+```text
+data/hillstrom.csv
+```
+
+Open the notebook using Jupyter Notebook or VS Code and run all cells.
+
+The notebook uses the project's shared data-loading module.
+
+### 9.7 Run Online Retail Analysis
+
+The Online Retail exploratory analysis is available in:
+
+```text
+notebooks/02_online_retail_eda.ipynb
+```
+
+First, run the preprocessing command in Section 9.5.
+
+The processed product-sales dataset should then be available at:
+
+```text
+data/processed/online_retail_product_sales.csv
+```
+
+Open the notebook using Jupyter Notebook or VS Code and run all cells.
+
+The notebook loads the processed dataset from the project directory.
 
 ## 10. Pricing-Policy Results
 
@@ -530,6 +625,7 @@ LinearDML performed better on individual treatment-effect prediction metrics, in
 The Difference-in-Means estimator estimates an aggregate treatment effect rather than individual customer effects. Therefore, individual-effect MAE, RMSE, and correlation are not applicable to this baseline and are not reported.
 
 These metrics measure different aspects of estimator performance. Lower average treatment-effect bias does not necessarily imply better individual treatment-effect predictions.
+
 ### 11.4 Seed 42 Investigation
 
 Seed 42 showed greater sensitivity than the other evaluated partitions.
@@ -558,17 +654,21 @@ Automated tests are included in:
 
 The tests cover dynamic-pricing functionality, Difference-in-Means baseline calculations, and DML evaluation metrics.
 
-The latest previously verified test result was:
+The previously recorded test result was:
 
 **38 tests passed in 14.09 seconds.**
 
+A subsequent verification run in the current Python 3.13 environment produced:
+
+**38 tests passed in 6.34 seconds.**
+
 Run the test suite from the repository root:
 
-```bash
+```powershell
 python -m pytest -q
 ```
 
-This is the latest observed result. The test suite should be run again before final submission to confirm that it still passes after any subsequent code changes.
+The test suite should be run again before final submission to confirm that it still passes after any subsequent code changes.
 
 ## 13. Limitations and Critical Analysis
 
@@ -657,7 +757,7 @@ All five calculated 95% intervals contained the reference ATE for each discount 
 The treatment model's ROC-AUC was approximately 0.500 for every discount. Because treatment assignment was randomized in the synthetic generator, a treatment-model score near 0.5 is expected and should not be interpreted as evidence of a failed treatment model.
 
 | Discount | Outcome-model RMSE | Outcome-model R² | Treatment ROC-AUC |
-|---:|---:|---:|---:|
+|---|---:|---:|---:|
 | 5% | 0.408579 | 0.046232 | 0.500 |
 | 10% | 0.414323 | 0.044018 | 0.500 |
 | 15% | 0.421426 | 0.045473 | 0.500 |
@@ -779,4 +879,4 @@ The repository is maintained collaboratively, with development changes tracked t
 
 ---
 
-**Project status:** The project has a working analytical foundation, recorded validation results, pricing-policy comparisons, and automated tests. Final reproducibility checks, integration review, and submission-quality verification remain necessary before claiming full project completion.
+**Project status:** The project has a working analytical foundation, recorded validation results, pricing-policy comparisons, and automated tests. Both exploratory notebooks have been run successfully in the current development environment, and the automated test suite has passed with 38 tests. Final reproducibility checks, integration review, and submission-quality verification remain necessary before claiming full project completion.
