@@ -95,5 +95,23 @@ class TestPricingCalculations(unittest.TestCase):
         self.assertFalse(result)
         self.assertIn("Dataset is empty", output)
 
+    def test_missing_numeric_values_are_detected(self):
+        self.valid_data.loc[0, "revenue"] = float("nan")
+        self.valid_data.to_csv(self.csv_path, index=False)
+
+        result, output = self.run_validator()
+
+        self.assertFalse(result)
+        self.assertIn("missing or invalid values", output)
+
+    def test_non_finite_values_are_detected(self):
+        self.valid_data.loc[0, "original_price"] = float("inf")
+        self.valid_data.to_csv(self.csv_path, index=False)
+
+        result, output = self.run_validator()
+
+        self.assertFalse(result)
+        self.assertIn("non-finite values", output)
+
 if __name__ == "__main__":
     unittest.main()
