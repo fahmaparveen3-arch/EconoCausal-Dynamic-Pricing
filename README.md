@@ -138,17 +138,21 @@ The dataset contains three experimental groups:
 
 The randomized treatment assignment makes this dataset useful for investigating the effects of marketing emails on customer outcomes.
 
-Earlier analysis recorded the following results:
+The verified analysis recorded the following results:
 
-| Comparison or Metric | Recorded Result |
+| Comparison or Metric | Result |
 |---|---:|
 | Men's email vs. no email — conversion effect | +0.681 percentage points |
 | Women's email vs. no email — conversion effect | +0.311 percentage points |
 | Baseline conversion model ROC-AUC | 0.5490 |
 | Baseline conversion model PR-AUC | 0.0103 |
-| Reported predicted uplift | 0.632 percentage points |
+| Mean predicted uplift from the T-learner | 0.632 percentage points |
+| T-learner Qini coefficient | 0.8665 |
+| Estimated incremental conversions | 35.707 |
 
-These results are from the earlier marketing-analysis stage and should be reproduced from the project files before final submission.
+The conversion effects are estimated from the randomized experiment. The predicted uplift and Qini results are model-based evaluation measures and should be interpreted separately from the observed group-level treatment effects.
+
+These results describe the analysed dataset and modelling setup; they do not establish that individual customer treatment effects can be predicted with certainty.
 
 The expected dataset location is:
 
@@ -255,17 +259,28 @@ This controlled design allows the project to compare estimated effects with refe
 
 ### 7.1 Hillstrom Marketing Causal Analysis
 
-The Hillstrom analysis investigates whether email marketing interventions affect customer visits and conversions.
+The Hillstrom analysis investigates whether email marketing interventions affect customer visits and conversions using a randomized marketing experiment.
 
 The principal comparison uses:
 
-- Treatment group: Men's E-Mail.
-- Control group: No E-Mail.
-- Outcome: Customer conversion.
-
-The analysis compares conversion rates and estimates the difference between the treatment and control groups.
+- **Treatment group:** Men's E-Mail.
+- **Control group:** No E-Mail.
+- **Outcome:** Customer conversion.
 
 The Women's E-Mail group is also examined separately.
+
+The observed conversion-rate differences were:
+
+- Men's E-Mail compared with No E-Mail: +0.681 percentage points.
+- Women's E-Mail compared with No E-Mail: +0.311 percentage points.
+
+A T-learner approach was used to estimate customer-level treatment-effect predictions. The mean predicted uplift was 0.632 percentage points, with a Qini coefficient of 0.8665 and an estimated 35.707 incremental conversions.
+
+These individual uplift values are model predictions, not directly observed individual causal effects. The uplift ranking results are exploratory, and the ranking performance was not consistently monotonic across customer groups.
+
+A paired bootstrap comparison of Random Forest and HistGradientBoosting Qini performance produced an estimated difference of 1.4925, with a 95% confidence interval of [-3.2586, 6.4940]. Since this interval includes zero, the analysis does not provide statistically supported evidence that HistGradientBoosting outperforms Random Forest.
+
+The results are specific to the Hillstrom dataset, selected treatment comparison, and fitted models. They should not be interpreted as proof of reliable individual-level uplift prediction in other populations.
 
 ### 7.2 Causal Machine Learning
 
@@ -339,26 +354,25 @@ The recorded product-level correlation results were:
 | Product | Price-Quantity Correlation | p-value |
 |---|---:|---:|
 | Lunch Bag Red Retrospot | -0.3388 | 0.2575 |
-| Regency Cake Stand | +0.1984 | 0.5158 |
+| Regency Cake Stand | +0.1956 | 0.5219 |
 | Party Bunting | -0.0916 | 0.7660 |
-| Jumbo Bag | +0.1192 | 0.6982 |
-| White Hanging Heart | +0.0815 | 0.7911 |
+| Jumbo Bag | +0.1329 | 0.6652 |
+| White Hanging Heart | +0.0809 | 0.7928 |
 
 The recorded pooled regression results were:
 
 | Metric | Result |
 |---|---:|
-| Price coefficient | +0.3416 |
-| Standard error | 1.2339 |
-| t-statistic | 0.2769 |
-| p-value | 0.7831 |
+| Price coefficient | +0.3691 |
+| Standard error | 1.2321 |
+| t-statistic | 0.2995 |
+| p-value | 0.7658 |
 | Observations | 65 |
 | Residual degrees of freedom | 47 |
 
-The analysis did not identify a statistically significant price-quantity relationship among the five selected products or in the pooled regression.
+The analysis did not identify a statistically significant price-quantity relationship for any of the five selected products or in the pooled regression. All product-level correlation p-values and the pooled regression p-value were above the 0.05 significance level.
 
-These results should be treated as exploratory findings, not causal estimates of price elasticity.
-
+These results indicate that the analysis did not find statistically significant evidence of a linear price-quantity association in the selected observations. The findings should be treated as exploratory and observational, not as causal estimates of price elasticity.
 ## 8. Setup and Installation
 
 ### 8.1 Clone the Repository
@@ -727,6 +741,13 @@ The synthetic ground-truth treatment effects were calculated using the known pur
 | 10% | 24.69% |
 | 15% | 25.86% |
 | 20% | 24.31% |
+
+The project uses two discount-weighting approaches for different evaluation purposes:
+
+- **Actual-distribution weighting:** The average treatment effect uses the observed proportions of the four discount levels among treated customers. This represents the actual discount distribution in the generated dataset.
+- **Equal weighting:** Each discount level (5%, 10%, 15%, and 20%) receives a 25% weight, regardless of its observed frequency. This gives all four discount levels equal importance.
+
+These approaches estimate different average treatment effects and should be interpreted separately. Their results are not directly interchangeable.
 
 **Repeated-Seed Holdout Results**
 
