@@ -4,65 +4,57 @@ An applied data science project combining causal inference, machine learning, cu
 
 ## 1. Project Overview
 
-EconoCausal explores how data science and causal inference can support business decisions involving customer behaviour, marketing interventions, and pricing strategies.
+EconoCausal investigates how causal inference and machine learning can support customer-level treatment-effect estimation and dynamic pricing decisions.
 
-The project brings together three complementary analytical components:
+The project combines three datasets:
 
-1. **Randomized marketing analysis:** Uses the Hillstrom Email Marketing dataset to investigate the effects of email campaigns on customer visits and conversions.
-2. **Observational retail analysis:** Uses the UCI Online Retail dataset to explore product sales, prices, quantities, and demand patterns.
-3. **Synthetic dynamic-pricing experiment:** Uses generated customer data with known simulation assumptions to evaluate treatment-effect estimators and compare discount policies.
+- **Hillstrom Email Marketing Dataset:** Used to study the causal effect of email marketing campaigns and explore customer uplift.
+- **UCI Online Retail Dataset:** Used for observational retail sales, product-price, and demand analysis.
+- **Synthetic Dynamic-Pricing Dataset:** Used to evaluate discount-specific causal effects, validate Double Machine Learning (DML) models against known ground truth, and compare pricing policies.
 
-These components address different analytical questions. The randomized marketing experiment, observational retail analysis, and synthetic pricing experiment are evaluated separately rather than being treated as one common causal experiment.
+The project uses Python, statistical analysis, machine learning, and causal inference techniques to examine treatment effects and pricing outcomes.
 
 ## 2. Project Objectives
 
-The main objectives are to:
+The main objectives are:
 
-- Analyse the effects of marketing interventions on customer behaviour.
-- Explore historical retail sales, product prices, and quantities.
-- Apply machine learning and causal inference techniques to estimate treatment effects.
-- Compare causal estimators against a Difference-in-Means baseline.
-- Evaluate estimator performance using known synthetic reference effects.
-- Investigate the stability of estimates across different train/test partitions.
-- Compare discount policies using expected purchase probability and expected profit.
-- Build a reproducible and documented Python project with reusable modules and automated tests.
+1. Analyse the impact of email marketing campaigns using randomized experimental data.
+2. Explore customer-level treatment effects and uplift modelling.
+3. Develop a synthetic pricing dataset with known causal effects.
+4. Apply Double Machine Learning to estimate discount-specific treatment effects.
+5. Validate causal estimates against known synthetic ground truth.
+6. Evaluate model performance across multiple random seeds and validation settings.
+7. Compare pricing policies using expected revenue and expected profit.
+8. Explore product-price and sales relationships using real-world retail data.
+9. Build a reproducible and testable causal-inference workflow.
 
 ## 3. Technology Stack
 
 | Area | Tools and Libraries |
 |---|---|
-| Programming language | Python |
+| Programming language | Python 3.13 |
 | Data manipulation | Pandas, NumPy |
 | Data visualisation | Matplotlib, Seaborn |
 | Machine learning | Scikit-learn |
 | Causal inference | EconML |
 | Statistical analysis | SciPy, Statsmodels |
-| Development environment | VS Code, Jupyter Notebook |
+| Notebook environment | Jupyter Notebook |
+| Excel file handling | OpenPyXL |
+| Automated testing | Pytest |
+| Development environment | VS Code |
 | Version control | Git and GitHub |
-| Testing | Pytest |
-| Data storage | CSV |
 
 ## 4. Project Structure
-
-The repository is organised into data-processing, pricing, modelling, evaluation, testing, notebook, and reporting components.
-
-The following tree shows the principal source files and directories inspected in the repository. It is a simplified view and does not list every dataset, notebook, backup, cache, or generated file.
 
 ```text
 EconoCausal-Dynamic-Pricing/
 │
 ├── data/
 │   ├── hillstrom.csv
-│   ├── prepared_pricing.csv
 │   ├── synthetic_pricing.csv
+│   ├── prepared_pricing.csv
 │   ├── online+retail/
 │   └── processed/
-│       ├── online_retail_cleaned.csv
-│       ├── online_retail_product_sales.csv
-│       ├── online_retail_excluded.csv
-│       ├── online_retail_fully_reversed_audit.csv
-│       ├── online_retail_non_product_audit.csv
-│       └── online_retail_returns_cancellations.csv
 │
 ├── notebooks/
 │   ├── 01_hillstrom_eda.ipynb
@@ -77,939 +69,764 @@ EconoCausal-Dynamic-Pricing/
 │   │   ├── prepare_pricing_data.py
 │   │   └── preprocess_online_retail.py
 │   │
+│   ├── evaluation/
+│   │   ├── compare_discount_causal_effects.py
+│   │   ├── compare_dml_estimators.py
+│   │   ├── compare_pricing_policies.py
+│   │   ├── evaluate_pricing_profit.py
+│   │   ├── evaluate_uplift.py
+│   │   ├── validate_dml_against_truth.py
+│   │   ├── validate_dml_holdout.py
+│   │   ├── validate_dml_model_configurations.py
+│   │   ├── validate_dml_repeated_seeds.py
+│   │   ├── validate_dml_repeated_split_ratios.py
+│   │   └── validate_dml_split_ratios.py
+│   │
 │   ├── models/
 │   │   ├── train_dml.py
 │   │   └── train_uplift.py
 │   │
-│   ├── pricing/
-│   │   └── dynamic_pricing.py
-│   │
-│   └── evaluation/
-│       ├── compare_discount_causal_effects.py
-│       ├── compare_dml_estimators.py
-│       ├── compare_pricing_policies.py
-│       ├── evaluate_pricing_profit.py
-│       ├── evaluate_uplift.py
-│       ├── validate_dml_against_truth.py
-│       └── validate_dml_holdout.py
+│   └── pricing/
+│       └── dynamic_pricing.py
 │
 ├── reports/
+│   ├── discount_causal_effect_comparison.csv
+│   ├── dml_customer_effects.csv
+│   ├── dml_estimator_comparison.csv
+│   ├── dml_estimator_repeated_seed_results.csv
+│   ├── dml_estimator_repeated_seed_summary.csv
+│   ├── dml_holdout_validation.csv
+│   ├── dml_model_configuration_results.csv
+│   ├── dml_model_configuration_summary.csv
+│   ├── dml_repeated_seed_80_20_results.csv
+│   ├── dml_repeated_seed_80_20_summary.csv
+│   ├── dml_repeated_split_ratios_results.csv
+│   ├── dml_repeated_split_ratios_summary.csv
+│   ├── dml_truth_holdout_validation.csv
+│   ├── dml_truth_repeated_seed_results.csv
+│   ├── dml_truth_repeated_seed_summary.csv
+│   ├── dml_truth_validation.csv
+│   ├── dml_split_ratio_validation.csv
+│   ├── pricing_policy_comparison.csv
+│   └── pricing_profit_evaluation.csv
 │
 ├── tests/
+│   ├── test_compare_dml_estimators.py
+│   ├── test_discount_causal_effects.py
 │   ├── test_dynamic_pricing.py
-│   └── test_compare_dml_estimators.py
+│   └── test_train_dml.py
 │
-├── README.md
-├── README_backup.md
 ├── requirements.txt
-└── update_online_retail_notebook.py
+├── .gitignore
+└── README.md
 ```
 
-The `reports/` directory contains generated evaluation results and pricing-policy reports. The `notebooks/` directory contains the project's exploratory analysis notebooks.
+**Data and generated files:** Some local datasets and generated outputs are intentionally excluded from Git through `.gitignore`. In particular, the local Hillstrom CSV, raw Online Retail files, processed files, and prepared pricing dataset are not necessarily included in a fresh clone. The tracked synthetic pricing dataset and report files are maintained separately.
 
 ## 5. Datasets
 
 ### 5.1 Hillstrom Email Marketing Dataset
 
-The Hillstrom dataset contains 64,000 customers from a randomized email marketing experiment.
+The Hillstrom dataset contains 64,000 customers and 12 columns. It originates from a randomized email marketing experiment and includes three groups:
 
-It includes customer characteristics, marketing treatment groups, website visits, conversions, and spending information.
-
-Important columns include:
-
-- `recency`
-- `history_segment`
-- `history`
-- `mens`
-- `womens`
-- `zip_code`
-- `newbie`
-- `channel`
-- `segment`
-- `visit`
-- `conversion`
-- `spend`
-
-The dataset contains three experimental groups:
-
-- Men's E-Mail
-- Women's E-Mail
+- Mens E-Mail
+- Womens E-Mail
 - No E-Mail
 
-The randomized treatment assignment makes this dataset useful for investigating the effects of marketing emails on customer outcomes.
+The dataset includes customer characteristics, campaign assignment, website visits, conversions, and spending.
 
-The verified analysis recorded the following results:
-
-| Comparison or Metric | Result |
-|---|---:|
-| Men's email vs. no email — conversion effect | +0.681 percentage points |
-| Women's email vs. no email — conversion effect | +0.311 percentage points |
-| Baseline conversion model ROC-AUC | 0.5490 |
-| Baseline conversion model PR-AUC | 0.0103 |
-| Mean predicted uplift from the T-learner | 0.632 percentage points |
-| T-learner Qini coefficient | 0.8665 |
-| Estimated incremental conversions | 35.707 |
-
-The conversion effects are estimated from the randomized experiment. The predicted uplift and Qini results are model-based evaluation measures and should be interpreted separately from the observed group-level treatment effects.
-
-These results describe the analysed dataset and modelling setup; they do not establish that individual customer treatment effects can be predicted with certainty.
-
-The expected dataset location is:
+The local dataset is expected at:
 
 ```text
 data/hillstrom.csv
 ```
 
-Place the Hillstrom CSV file at this location before running the Hillstrom notebook.
+The project uses this dataset to compare email campaign outcomes and investigate customer uplift.
+
+**Data source:** A publicly accessible mirror of the Hillstrom dataset is used:
+
+[Hillstrom dataset CSV mirror](https://raw.githubusercontent.com/W-Tran/uplift-modelling/refs/heads/master/data/hillstrom/Kevin_Hillstrom_MineThatData_E-MailAnalytics_DataMiningChallenge_2008.03.20.csv)
+
+The linked file is a third-party mirror, not the original publisher's website.
 
 ### 5.2 UCI Online Retail Dataset
 
-The Online Retail dataset contains transactional records from a UK-based online retailer.
+The Online Retail dataset is obtained from the UCI Machine Learning Repository.
 
-It is used for exploratory analysis of:
+It contains transactional records from a UK-based online retailer between December 2010 and December 2011.
 
-- Product sales.
-- Unit prices.
-- Quantities purchased.
-- Revenue patterns.
-- Product-level demand behaviour.
-- Relationships between price and quantity.
+The dataset includes:
 
-**Dataset source:** [UCI Machine Learning Repository — Online Retail](https://archive.ics.uci.edu/dataset/352/online+retail)
+- Invoice number
+- Product stock code
+- Product description
+- Quantity
+- Invoice date
+- Unit price
+- Customer ID
+- Country
 
-The original Excel dataset is expected at:
+**Official source:** [UCI Online Retail Dataset](https://archive.ics.uci.edu/dataset/352/online+retail)
+
+The raw Excel file is expected at:
 
 ```text
 data/online+retail/Online Retail.xlsx
 ```
 
-This dataset is observational. Relationships found between prices and quantities should not automatically be interpreted as causal price effects.
+This is observational transaction data. Relationships found in this dataset should not be interpreted as causal effects.
 
 ### 5.3 Synthetic Dynamic-Pricing Dataset
 
-A separate synthetic dataset was generated for the dynamic-pricing experiment.
+A synthetic customer-level dataset is generated to study discount-based pricing decisions.
 
-It contains 10,000 synthetic customers and is used to evaluate discount-treatment effects under known data-generating assumptions.
+It contains 10,000 customers and 14 columns.
 
-The synthetic dataset includes customer characteristics such as:
+The dataset includes customer characteristics, treatment assignment, discount information, purchase outcomes, and pricing-related variables.
 
-- Age.
-- Income.
-- Previous purchases.
-- Product category.
-- Treatment assignment.
-- Discount rate.
-- Purchase outcome.
+A known ground-truth treatment effect is incorporated into the synthetic data-generation process. This makes it possible to compare estimated treatment effects with the reference causal effects.
 
-The synthetic experiment makes it possible to compare estimated treatment effects against reference effects calculated from the simulation's purchase-probability model.
+The generator uses a fixed default random seed of 42 to support reproducibility.
 
-**Important:** Synthetic results are useful for controlled testing. They do not establish real-world pricing effectiveness.
+The tracked dataset is:
+
+```text
+data/synthetic_pricing.csv
+```
+
+The prepared dataset is generated locally:
+
+```text
+data/prepared_pricing.csv
+```
+
+The prepared file is excluded from Git.
 
 ## 6. Data Preprocessing
 
 ### 6.1 Hillstrom Data
 
-The Hillstrom dataset was loaded and inspected before analysis.
+The Hillstrom dataset is used for randomized campaign analysis.
 
-The earlier data inspection recorded:
+The analysis includes:
 
-- 64,000 rows.
-- 12 columns.
-- No missing values in the inspected dataset.
-- Three marketing treatment groups.
+- Checking the dataset dimensions and column types.
+- Examining missing values and data quality.
+- Analysing the distribution of treatment groups.
+- Comparing campaign conversion and visit rates.
+- Preparing customer characteristics for modelling.
+- Separating treatment and control groups for uplift analysis.
 
-The marketing analysis used the Men's E-Mail and No E-Mail groups for the principal comparison.
+The primary campaign comparisons are Mens E-Mail versus No E-Mail and Womens E-Mail versus No E-Mail.
 
 ### 6.2 Online Retail Data
 
-The Online Retail data required cleaning before product-level analysis.
+The Online Retail preprocessing workflow examines the original transaction data and separates valid product sales from records that should be audited or excluded.
 
-The verified row counts for the original and currently available processed files are:
-
-| Dataset Stage | Verified Rows |
+| Processing category | Records |
 |---|---:|
 | Original dataset | 541,909 |
 | Cleaned dataset | 524,110 |
 | Product-sales dataset | 521,755 |
-| Excluded dataset | 1,176 |
+| Excluded records | 1,176 |
 
-The cleaned product-sales dataset was checked for duplicate records, missing product descriptions, invalid quantities, invalid prices, and revenue inconsistencies.
+The excluded-record count is a separate audit category. It should not be treated as another sequential processing stage to add to the cleaned and product-sales counts.
 
-Previously recorded validation results included:
+Additional audit findings:
 
-- No duplicate rows in the product-sales dataset.
-- No missing product descriptions.
-- No invalid quantity or price records.
-- No revenue discrepancies.
-- CustomerID missingness of approximately 25.2%.
+- Non-product audit records: 2,355.
+- Returns and cancellations: 10,587.
+- Excluded records: 1,176.
+- Fully reversed audit records: 1,536.
+- Product-sales dataset shape: 521,755 rows and 9 columns.
+- Duplicate records in the final product-sales dataset: 0.
+- Invalid quantity records in the final product-sales dataset: 0.
+- Invalid unit-price records in the final product-sales dataset: 0.
+- Invalid invoice-date records in the final product-sales dataset: 0.
+- Revenue consistency: revenue equals quantity multiplied by unit price.
+- Missing CustomerID values: 131,420.
 
-The current verified product-sales count is **521,755 records**. Earlier documentation contained a different count; the verified processed CSV row count is used in this README.
+Because many records do not contain a CustomerID, customer-level analysis is limited. The project therefore focuses on transaction-level and product-level analysis where appropriate.
 
 ### 6.3 Synthetic Pricing Data
 
-The synthetic pricing data was generated using a controlled probability model.
+The synthetic pricing dataset is generated and prepared through separate modules.
 
-The generator uses customer characteristics and discount rates to calculate purchase probabilities. A binary purchase outcome is then generated from those probabilities.
+The preparation workflow includes:
 
-Treatment assignment is randomized, and treated customers receive one of the tested positive discount levels.
+- Loading the generated pricing dataset.
+- Checking required columns.
+- Validating customer identifiers.
+- Checking treatment and outcome variables.
+- Checking discount values.
+- Preparing the data for causal estimation.
+- Validating missing values and numerical ranges.
 
-This controlled design allows the project to compare estimated effects with reference effects calculated from the simulation.
+Verified prepared dataset:
+
+| Check | Result |
+|---|---:|
+| Rows | 10,000 |
+| Columns | 14 |
+| Missing values | 0 |
+| Duplicate customer IDs | 0 |
+| Control customers | 5,003 |
+| Treatment customers | 4,997 |
+| Discount rules valid | True |
 
 ## 7. Methodology
 
 ### 7.1 Hillstrom Marketing Causal Analysis
 
-The Hillstrom analysis investigates whether email marketing interventions affect customer visits and conversions using a randomized marketing experiment.
+The randomized Hillstrom experiment is used to estimate the impact of email marketing campaigns.
 
-The principal comparison uses:
+The main comparisons are:
 
-- **Treatment group:** Men's E-Mail.
-- **Control group:** No E-Mail.
-- **Outcome:** Customer conversion.
+- Mens E-Mail versus No E-Mail.
+- Womens E-Mail versus No E-Mail.
 
-The Women's E-Mail group is also examined separately.
+The analysis examines conversion rates, visit rates, spending, statistical significance, and confidence intervals.
 
-The observed conversion-rate differences were:
-
-- Men's E-Mail compared with No E-Mail: +0.681 percentage points.
-- Women's E-Mail compared with No E-Mail: +0.311 percentage points.
-
-A T-learner approach was used to estimate customer-level treatment-effect predictions. The mean predicted uplift was 0.632 percentage points, with a Qini coefficient of 0.8665 and an estimated 35.707 incremental conversions.
-
-These individual uplift values are model predictions, not directly observed individual causal effects. The uplift ranking results are exploratory, and the ranking performance was not consistently monotonic across customer groups.
-
-A paired bootstrap comparison of Random Forest and HistGradientBoosting Qini performance produced an estimated difference of 1.4925, with a 95% confidence interval of [-3.2586, 6.4940]. Since this interval includes zero, the analysis does not provide statistically supported evidence that HistGradientBoosting outperforms Random Forest.
-
-The results are specific to the Hillstrom dataset, selected treatment comparison, and fitted models. They should not be interpreted as proof of reliable individual-level uplift prediction in other populations.
+A baseline conversion prediction model and a T-learner approach are also used to explore customer-level uplift.
 
 ### 7.2 Causal Machine Learning
 
-The project uses Double Machine Learning (DML) to estimate treatment effects in the synthetic pricing experiment.
+Double Machine Learning is applied to estimate customer-level treatment effects in the synthetic pricing dataset.
 
-The two DML estimators evaluated are:
+The DML workflow includes:
 
-- LinearDML.
-- NonParamDML with Gradient Boosting.
+1. Data validation.
+2. Feature preparation.
+3. Treatment and outcome definition.
+4. Model fitting.
+5. Customer-level treatment-effect estimation.
+6. Holdout evaluation.
+7. Comparison with known synthetic ground truth.
 
-The modelling workflow uses machine-learning nuisance models to estimate the relevant outcome and treatment relationships before estimating treatment effects.
+The implementation uses EconML and machine-learning models from Scikit-learn.
 
-The project also compares the DML estimates against a Difference-in-Means baseline.
+The project also compares LinearDML, NonParamDML with Gradient Boosting, and a Difference-in-Means baseline.
 
 ### 7.3 Synthetic Ground-Truth Validation
 
-Because the synthetic purchase-probability model is known, reference treatment effects can be calculated from the simulation assumptions.
+The synthetic dataset contains known treatment effects.
 
-The estimated treatment effects are compared with these reference effects using:
+This allows the estimated treatment effects to be evaluated using:
 
-- ATE bias.
+- Average Treatment Effect (ATE).
+- Estimation bias.
 - Mean Absolute Error (MAE).
 - Root Mean Squared Error (RMSE).
-- Effect correlation.
+- Correlation between estimated and true customer-level effects.
+- Confidence-interval coverage.
 
-This helps distinguish average treatment-effect accuracy from individual treatment-effect prediction performance.
+The project uses holdout evaluation and repeated random seeds to examine how stable the estimates are under different data splits.
 
 ### 7.4 Dynamic Pricing and Expected Profit
 
-The pricing component estimates purchase probability under different discount levels.
+The project evaluates multiple discount policies.
 
-It evaluates candidate discounts of:
+The pricing analysis considers:
 
-- 0%
-- 5%
-- 10%
-- 15%
-- 20%
+- Discount rate.
+- Expected purchase rate.
+- Expected revenue per customer.
+- Expected profit per customer.
+- Total expected revenue.
+- Total expected profit.
 
-Expected profit is calculated using the model-based purchase probability and the illustrative product-cost assumptions.
-
-The comparison uses the same 10,000 synthetic customers for all five candidate policies.
+The purpose is to compare the tested pricing policies under the assumptions of the synthetic dataset.
 
 ### 7.5 Repeated-Seed DML Evaluation
 
-To investigate sensitivity to train/test partitions, the Difference-in-Means baseline and both DML estimators were evaluated across five random seeds:
+Repeated-seed evaluation is used to examine the stability of causal estimates.
 
-`42, 7, 21, 35, 99`
+Five random seeds are used:
 
-The dataset was divided using a 75% training and 25% holdout split, stratified by treatment assignment.
+```text
+42, 7, 21, 35, 99
+```
 
-Each run used:
+Each evaluation uses a stratified 75/25 train-test split.
 
-- 7,500 training customers.
-- 2,500 holdout customers.
+The same holdout partitions are used for the estimators being compared within each seed.
 
-The same evaluation seeds and corresponding training and holdout splits were used for all three estimators.
+Two ground-truth averaging definitions are used in separate evaluation scripts:
+
+- `compare_dml_estimators.py` calculates the reference ATE using equal weighting across the four discount levels.
+- `validate_dml_against_truth.py` calculates the reference ATE using the empirical proportions of discount levels among treated customers.
+
+These are different evaluation definitions. Their reference ATE values should not be mixed or treated as duplicate results. The estimated LinearDML ATEs can be the same while the reference ATE and calculated bias differ.
 
 ### 7.6 Online Retail Price and Demand Analysis
 
-The Online Retail analysis explores product-level relationships between unit price and quantity sold.
+The Online Retail dataset is used to examine selected products over time.
 
-It includes product-level correlation analysis and a pooled regression.
+The analysis includes:
 
-The analysis is exploratory because the dataset is observational and product prices may be influenced by factors other than demand.
+- Selecting products with sufficient transaction history.
+- Aggregating sales by month.
+- Calculating weighted average prices.
+- Examining monthly sales patterns.
+- Exploring correlations between price and quantity.
+- Fitting an exploratory regression model.
+
+The analysis is observational. It does not establish that price changes caused changes in demand.
 
 ### 7.7 Online Retail Exploratory Results
 
-The recorded product-level correlation results were:
+Five selected products were analysed over 13 months each, producing 65 monthly observations.
 
-| Product | Price-Quantity Correlation | p-value |
+The Pearson correlations between monthly weighted average price and quantity were:
+
+| Product | Correlation (r) | p-value |
 |---|---:|---:|
-| Lunch Bag Red Retrospot | -0.3388 | 0.2575 |
-| Regency Cake Stand | +0.1956 | 0.5219 |
-| Party Bunting | -0.0916 | 0.7660 |
-| Jumbo Bag | +0.1329 | 0.6652 |
-| White Hanging Heart | +0.0809 | 0.7928 |
+| 20725 Lunch Bag Red Retrospot | -0.3388 | 0.2575 |
+| 22423 Regency Cake Stand 3 Tier | +0.1956 | 0.5219 |
+| 47566 Party Bunting | -0.0916 | 0.7660 |
+| 85099B Jumbo Bag Red Retrospot | +0.1329 | 0.6652 |
+| 85123A White Hanging Heart T-Light Holder | +0.0809 | 0.7928 |
 
-The recorded pooled regression results were:
+None of the five product-level correlations is statistically significant at the 5% level.
 
-| Metric | Result |
+The exploratory regression using 65 observations produced:
+
+| Statistic | Result |
 |---|---:|
-| Price coefficient | +0.3691 |
+| Price coefficient | 0.3691 |
 | Standard error | 1.2321 |
 | t-statistic | 0.2995 |
 | p-value | 0.7658 |
-| Observations | 65 |
 | Residual degrees of freedom | 47 |
 
-The analysis did not identify a statistically significant price-quantity relationship for any of the five selected products or in the pooled regression. All product-level correlation p-values and the pooled regression p-value were above the 0.05 significance level.
+The price coefficient is not statistically significant at the 5% level.
 
-These results indicate that the analysis did not find statistically significant evidence of a linear price-quantity association in the selected observations. The findings should be treated as exploratory and observational, not as causal estimates of price elasticity.
+These results should be interpreted cautiously because:
+
+- Only 13 monthly observations are available per product.
+- Monthly weighted average prices can change because of transaction and quantity mix, not necessarily because the actual listed price changed.
+- The data are observational.
+- Potential confounding, endogeneity, and time-series dependence may affect the estimates.
+
+Therefore, the results do not establish causal price elasticity.
+
 ## 8. Setup and Installation
 
-### 8.1 Clone the Repository
+### 8.1 Requirements
+
+The project uses Python 3.13 and the dependencies listed in `requirements.txt`.
+
+Git is required to clone the repository.
+
+### 8.2 Clone Repository
 
 ```bash
 git clone https://github.com/fahmaparveen3-arch/EconoCausal-Dynamic-Pricing.git
-```
-
-### 8.2 Move into the Project Directory
-
-```bash
 cd EconoCausal-Dynamic-Pricing
 ```
 
-### 8.3 Python Version
+### 8.3 Create Virtual Environment
 
-The project was developed and tested in a Python 3.13.16 environment.
-
-Python 3.13 is used for the current project environment.
-
-### 8.4 Create a Virtual Environment
-
-On Windows PowerShell:
+On Windows, using the Python launcher:
 
 ```powershell
-python -m venv .venv
+py -3.13 -m venv .venv
 ```
 
-### 8.5 Activate the Virtual Environment
+Alternatively, use an installed Python 3.13 executable.
 
-On Windows PowerShell:
+### 8.4 Activate Virtual Environment
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-If PowerShell prevents activation, use the following command in the current terminal session:
+### 8.5 Install Dependencies
 
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
-
-Then activate the environment again.
-
-### 8.6 Install Dependencies
-
-```powershell
+```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-The project was also developed and tested in an environment named `.venv313`.
+The project's development environment was verified using Python 3.13.16. All pinned dependencies installed successfully, and `pip check` reported no broken requirements.
 
-To activate that existing environment on the development machine, use:
+## 9. Running Project
 
-```powershell
-.\.venv313\Scripts\Activate.ps1
-```
-
-Alternatively, commands can be run directly using:
-
-```powershell
-.\.venv313\Scripts\python.exe
-```
-
-## 9. Running the Project
-
-Run project commands from the repository root.
+Run commands from the repository root.
 
 ### 9.1 Generate Synthetic Pricing Data
 
-```powershell
+```bash
 python -m src.data_processing.generate_synthetic_pricing_data
 ```
 
-### 9.2 Compare Pricing Policies
+This generates the synthetic pricing dataset.
 
-```powershell
+**Important:** The generator writes to `data/synthetic_pricing.csv`, which is tracked by Git. Running it may overwrite the existing dataset. Review the generated changes with `git diff` before staging or committing.
+
+### 9.2 Prepare Synthetic Pricing Data
+
+```bash
+python -m src.data_processing.prepare_pricing_data
+```
+
+This prepares the synthetic pricing data and writes the locally generated `data/prepared_pricing.csv` file.
+
+The prepared dataset is excluded from Git.
+
+### 9.3 Compare Pricing Policies
+
+```bash
 python -m src.evaluation.compare_pricing_policies
 ```
 
-### 9.3 Run Automated Tests
+This compares the tested discount policies and writes:
 
-```powershell
-python -m pytest -q
+```text
+reports/pricing_policy_comparison.csv
 ```
 
-### 9.4 Compare DML Estimators Across Repeated Seeds
+**Important:** This command overwrites the existing report. Review the results before committing any changes.
 
-Run from the project root:
+### 9.4 Run Automated Tests
 
-```powershell
+```bash
+python -m pytest -v
+```
+
+The verified test suite completed with 38 passing tests.
+
+### 9.5 Run Repeated-Seed DML Comparison
+
+```bash
 python -m src.evaluation.compare_dml_estimators
 ```
 
-Outputs:
+This evaluates the DML estimators over five random seeds and generates repeated-seed result and summary reports.
 
-- `reports/dml_estimator_repeated_seed_results.csv` — detailed results for each estimator and random seed.
-- `reports/dml_estimator_repeated_seed_summary.csv` — aggregated performance metrics across the five seeds.
+The script uses equal weighting across the four discount levels when calculating its reference average treatment effect.
 
-The single-split estimator comparison report contains previously generated results and is not regenerated by the current repeated-seed script.
+### 9.6 Preprocess Online Retail Data
 
-### 9.5 Online Retail Data Preprocessing
-
-The Online Retail preprocessing workflow is part of the project's data-preparation stage.
-
-The preprocessing source file is:
-
-```text
-src/data_processing/preprocess_online_retail.py
-```
-
-Before running the script, ensure the original Excel dataset is located at:
-
-```text
-data/online+retail/Online Retail.xlsx
-```
-
-Run the preprocessing command from the repository root:
-
-```powershell
+```bash
 python -m src.data_processing.preprocess_online_retail
 ```
 
-The verified preprocessing run produced the following files in `data/processed/`:
+This processes the raw Online Retail dataset and generates the required local processed files.
 
-- `online_retail_cleaned.csv`
-- `online_retail_product_sales.csv`
-- `online_retail_non_product_audit.csv`
-- `online_retail_returns_cancellations.csv`
-- `online_retail_excluded.csv`
-- `online_retail_fully_reversed_audit.csv`
+The raw and processed Online Retail data directories are excluded from Git.
 
-The verified product-sales dataset contains 521,755 records.
+### 9.7 Hillstrom Analysis
 
-### 9.6 Run Hillstrom Analysis
-
-The Hillstrom exploratory analysis is available in:
+Open the following notebook in Jupyter Notebook:
 
 ```text
 notebooks/01_hillstrom_eda.ipynb
 ```
 
-Ensure the dataset is placed at:
+The local Hillstrom dataset must be available at:
 
 ```text
 data/hillstrom.csv
 ```
 
-Open the notebook using Jupyter Notebook or VS Code and run all cells.
+### 9.8 Online Retail Analysis
 
-The notebook uses the project's shared data-loading module.
-
-### 9.7 Run Online Retail Analysis
-
-The Online Retail exploratory analysis is available in:
+Open the following notebook in Jupyter Notebook:
 
 ```text
 notebooks/02_online_retail_eda.ipynb
 ```
 
-First, run the preprocessing command in Section 9.5.
-
-The processed product-sales dataset should then be available at:
+The raw Online Retail Excel dataset must be available at:
 
 ```text
-data/processed/online_retail_product_sales.csv
+data/online+retail/Online Retail.xlsx
 ```
-
-Open the notebook using Jupyter Notebook or VS Code and run all cells.
-
-The notebook loads the processed dataset from the project directory.
 
 ## 10. Pricing-Policy Results
 
-The synthetic pricing experiment compared five discount policies using the same 10,000 synthetic customers.
+The synthetic pricing-policy comparison evaluates five discount rates.
 
-### 10.1 Expected Profit Comparison
+| Discount rate | Expected purchase rate | Expected revenue per customer | Expected profit per customer | Total expected revenue | Total expected profit |
+|---:|---:|---:|---:|---:|---:|
+| 5% | 0.2354 | 82.17 | 33.42 | 821,743.83 | 334,186.01 |
+| 0% | 0.2078 | 76.16 | 33.24 | 761,609.82 | 332,435.25 |
+| 10% | 0.2653 | 87.95 | 32.85 | 879,531.41 | 328,546.76 |
+| 15% | 0.2972 | 93.33 | 31.41 | 933,261.15 | 314,052.64 |
+| 20% | 0.3311 | 98.11 | 28.93 | 981,100.87 | 289,266.88 |
 
-| Discount | Expected Purchase Rate | Expected Profit per Customer | Total Expected Profit |
-|---|---:|---:|---:|
-| 0% | 20.78% | 33.24 | 332,435.25 |
-| 5% | 23.54% | 33.42 | 334,186.01 |
-| 10% | 26.53% | 32.85 | 328,546.76 |
-| 15% | 29.72% | 31.41 | 314,052.64 |
-| 20% | 33.11% | 28.93 | 289,266.88 |
+The 5% discount policy produced the highest expected profit per customer among the five tested policies.
 
-### 10.2 Interpretation
+- 5% discount: 33.42 expected profit per customer.
+- No discount: 33.24 expected profit per customer.
+- The 5% discount policy produced approximately 0.53% higher expected profit than the no-discount policy.
 
-The 5% discount produced the highest model-based expected profit among the five tested policies.
+The 20% discount produced the highest expected revenue but the lowest expected profit per customer among the tested policies.
 
-Its expected profit was:
-
-- 334,186.01 for the 5% discount.
-- 332,435.25 for the no-discount policy.
-
-The improvement over the no-discount policy was approximately 0.53%.
-
-The results illustrate a trade-off between purchase probability and profit. Larger discounts increased the estimated purchase rate, but they also reduced expected profit per customer.
-
-**Limitation:** The results use synthetic customers and illustrative product-cost assumptions. They do not establish that a 5% discount is optimal for a real business.
+These results depend on the assumptions and ground-truth relationships built into the synthetic dataset. The 5% discount is the best-performing policy among those tested, not a proven optimal discount for a real business.
 
 ## 11. DML Validation Results
 
-### 11.1 Full-Dataset Validation
+### 11.1 Full-Dataset Ground-Truth Validation
 
-The recorded full-dataset validation results were:
+The full-dataset validation compared estimated customer treatment effects with the known synthetic effects.
 
 | Metric | Result |
 |---|---:|
 | True ATE | 0.074463 |
 | Estimated ATE | 0.079521 |
-| ATE Bias | +0.005058 |
+| Bias | +0.005058 |
 | MAE | 0.016636 |
 | RMSE | 0.020166 |
 
+The estimated ATE is slightly higher than the reference ATE.
+
 ### 11.2 Holdout Validation
 
-The recorded holdout validation results were:
+The holdout evaluation used a 75/25 split, producing 2,500 test customers.
 
 | Metric | Result |
 |---|---:|
 | Holdout customers | 2,500 |
 | True ATE | 0.074861 |
 | Estimated ATE | 0.092794 |
-| ATE Bias | +0.017932 |
+| Bias | +0.017932 |
 | MAE | 0.020994 |
 | RMSE | 0.024203 |
 
-The initial holdout estimate was higher than the synthetic reference ATE. This motivated the repeated-seed evaluation.
+The holdout estimate is higher than the reference ATE. This difference demonstrates why a single train-test split should not be treated as sufficient evidence of model stability.
 
-### 11.3 Repeated-Seed Evaluation
+### 11.3 Repeated-Seed Estimator Comparison
 
-The Difference-in-Means baseline and both DML estimators were evaluated across five random seeds: 42, 7, 21, 35, and 99. All three estimators used identical training and holdout partitions for each seed.
+Five seeds were used to compare Difference-in-Means, LinearDML, and NonParamDML with Gradient Boosting.
 
-Each run used 7,500 training customers and 2,500 holdout customers. The reference effects were calculated from the known synthetic purchase-probability model.
+The estimator comparison summary uses equal weighting across the four discount levels to calculate the reference ATE.
 
-The recorded DML results were:
+| Metric | Difference-in-Means | LinearDML | NonParamDML |
+|---|---:|---:|---:|
+| Mean estimated ATE | 0.077594 | 0.078459 | 0.078441 |
+| Mean bias | +0.003091 | +0.003956 | +0.003938 |
+| Mean absolute bias | 0.006121 | 0.006120 | 0.005975 |
+| Bias standard deviation | 0.008180 | 0.008500 | 0.007810 |
+
+Additional individual-effect metrics:
 
 | Metric | LinearDML | NonParamDML |
 |---|---:|---:|
-| Number of runs | 5 | 5 |
-| Holdout customers per run | 2,500 | 2,500 |
-| Mean true ATE | 0.074503 | 0.074503 |
-| Mean estimated ATE | 0.078459 | 0.078441 |
-| Mean signed ATE bias | +0.003956 | +0.003938 |
-| Standard deviation of ATE bias | 0.008500 | 0.007810 |
 | Mean MAE | 0.018963 | 0.035780 |
 | Mean RMSE | 0.023124 | 0.050144 |
 | Mean effect correlation | 0.617833 | 0.231091 |
 
-**Mean Absolute ATE Bias Across Five Seeds**
+The Difference-in-Means baseline estimates the overall treatment effect but does not provide the individual treatment-effect predictions required for the individual-effect MAE, RMSE, and correlation metrics.
 
-| Estimator | Mean Absolute ATE Bias |
+In these five runs, LinearDML produced lower mean individual-effect MAE and RMSE than NonParamDML. These results describe the tested configuration and seeds; they do not establish universal estimator superiority.
+
+### 11.4 Holdout Seed 42 Investigation
+
+The seed 42 holdout evaluation produced:
+
+| Metric | Result |
 |---|---:|
-| Difference-in-Means baseline | 0.006121 |
-| LinearDML | 0.006120 |
-| NonParamDML | 0.005975 |
+| True holdout ATE | 0.074861 |
+| LinearDML estimated ATE | 0.092794 |
+| NonParamDML estimated ATE | 0.090849 |
+| LinearDML MAE | 0.020994 |
+| LinearDML RMSE | 0.024203 |
 
-The three estimators produced very similar mean absolute ATE bias. NonParamDML had the lowest value, while LinearDML was effectively tied with the Difference-in-Means baseline at the reported precision.
+The investigation also examined differences between the training and test samples. The seed 42 result illustrates how sampling variation can affect holdout estimates.
 
-LinearDML performed better on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation.
-
-The Difference-in-Means estimator estimates an aggregate treatment effect rather than individual customer effects. Therefore, individual-effect MAE, RMSE, and correlation are not applicable to this baseline and are not reported.
-
-These metrics measure different aspects of estimator performance. Lower average treatment-effect bias does not necessarily imply better individual treatment-effect predictions.
-
-### 11.4 Seed 42 Investigation
-
-Seed 42 showed greater sensitivity than the other evaluated partitions.
-
-The raw treatment-group purchase-rate difference was approximately:
-
-- Training set: 9.07%.
-- Holdout set: 3.72%.
-
-Both DML estimators produced estimates above the synthetic reference ATE for this partition:
-
-- LinearDML estimated ATE: 0.092794.
-- NonParamDML estimated ATE: 0.090849.
-- True ATE: 0.074861.
-
-The estimates were close to the training-set raw treatment difference, while the holdout raw treatment difference was substantially smaller.
-
-This suggests sensitivity to the train/test partition and variation in observed treatment-group outcomes. It does not establish overfitting or identify a definitive cause.
-
-### 11.5 Train/Test Split-Ratio Validation
-
-To investigate the sensitivity of DML estimates to different training and holdout sample sizes, three train/test split ratios were evaluated: 70/30, 75/25, and 80/20.
-
-The experiment used the synthetic pricing dataset, random seed 42, and stratified treatment assignment for all three configurations.
-
-**Validation Results**
-
-| Metric | 70/30 | 75/25 | 80/20 |
-|---|---:|---:|---:|
-| Training customers | 7,000 | 7,500 | 8,000 |
-| Holdout customers | 3,000 | 2,500 | 2,000 |
-| True ATE | 0.074993 | 0.074861 | 0.074851 |
-| Estimated ATE | 0.091989 | 0.092794 | 0.084694 |
-| Absolute ATE bias | 0.016996 | 0.017932 | 0.009843 |
-| MAE | 0.027921 | 0.020994 | 0.016179 |
-| RMSE | 0.030298 | 0.024203 | 0.019871 |
-
-**Interpretation**
-
-The 80/20 configuration produced the lowest absolute ATE bias, MAE, and RMSE among the three tested configurations. The 75/25 configuration performed better than 70/30 on MAE and RMSE, while the 70/30 configuration had the largest individual-effect prediction errors.
-
-All three configurations overestimated the synthetic reference ATE.
-
-These findings indicate that the training and holdout sample allocation can influence treatment-effect estimates and individual-effect prediction errors.
-
-**Limitation:** This initial comparison used one random seed (42). Therefore, the results do not establish that 80/20 is universally optimal. Additional repeated-seed evaluation is required to determine whether the observed differences remain consistent across alternative partitions.
-
-**Evaluation script:** `src/evaluation/validate_dml_split_ratios.py`
-
-**Generated report:** `reports/dml_split_ratio_validation.csv`
-
-### 11.6 Repeated-Seed Train/Test Split-Ratio Validation
-
-To evaluate the stability of DML performance across different training and holdout sample allocations, three split ratios were tested: 70/30, 75/25, and 80/20.
-
-Each split ratio was evaluated using five random seeds: 42, 7, 21, 35, and 99. LinearDML was trained using the same model configuration across all experiments, with preprocessing fitted only on training data.
-
-A total of 15 experiments were completed.
-
-**Repeated-Seed Validation Results**
-
-| Metric (Mean Across 5 Seeds) | 70/30 | 75/25 | 80/20 |
-|---|---:|---:|---:|
-| Absolute ATE Bias | 0.008115 | 0.006120 | 0.004011 |
-| MAE | 0.021871 | 0.018963 | 0.018335 |
-| RMSE | 0.026420 | 0.023124 | 0.022395 |
-| Effect Correlation | 0.606872 | 0.617833 | 0.587684 |
-
-**Interpretation**
-
-The 80/20 split achieved the lowest mean absolute ATE bias, MAE, and RMSE among the tested configurations. The 75/25 split achieved the highest mean effect correlation.
-
-The 80/20 split also showed the lowest standard deviation in absolute ATE bias (0.003564), indicating greater consistency in ATE estimation across the five tested seeds.
-
-All three configurations produced positive mean ATE bias, indicating slight overestimation of the synthetic reference effect.
-
-These findings suggest that an 80/20 split provides the strongest overall performance among the configurations evaluated. However, the results do not establish that it is universally optimal.
-
-**Limitation:** The experiment used five random seeds on one synthetic dataset. Further validation on additional datasets and alternative model configurations would strengthen the findings.
-
-**Evaluation script:** `src/evaluation/validate_dml_repeated_split_ratios.py`
-
-**Individual results:** `reports/dml_repeated_split_ratios_results.csv`
-
-**Summary report:** `reports/dml_repeated_split_ratios_summary.csv`
-
-
-### 11.7 Repeated-Seed Holdout Validation Against Synthetic Ground Truth
-
-To address the limitation of in-sample validation, an independent holdout validation was performed using `evaluate_dml_holdout()`.
-
-LinearDML was evaluated using five random seeds: 42, 7, 21, 35, and 99. Each experiment used a 75/25 train-test split, resulting in 2,500 holdout customers per run.
-
-The synthetic ground-truth treatment effects were calculated using the known purchase-probability formula. The benchmark incorporated the actual discount distribution among treated customers:
-
-| Discount Level | Actual Proportion |
-|---|---:|
-| 5% | 25.14% |
-| 10% | 24.69% |
-| 15% | 25.86% |
-| 20% | 24.31% |
-
-The project uses two discount-weighting approaches for different evaluation purposes:
-
-- **Actual-distribution weighting:** The average treatment effect uses the observed proportions of the four discount levels among treated customers. This represents the actual discount distribution in the generated dataset.
-- **Equal weighting:** Each discount level (5%, 10%, 15%, and 20%) receives a 25% weight, regardless of its observed frequency. This gives all four discount levels equal importance.
-
-These approaches estimate different average treatment effects and should be interpreted separately. Their results are not directly interchangeable.
-
-**Repeated-Seed Holdout Results**
-
-| Metric | Mean | Standard Deviation |
-|---|---:|---:|
-| True ATE | 0.074285 | 0.000211 |
-| Estimated ATE | 0.078459 | 0.008678 |
-| ATE Bias | 0.004174 | 0.008500 |
-| Absolute ATE Bias | 0.006164 | 0.006822 |
-| MAE | 0.018969 | 0.002112 |
-| RMSE | 0.023148 | 0.002122 |
-| Effect Correlation | 0.617850 | 0.138233 |
-
-**Interpretation**
-
-The model slightly overestimated the average treatment effect across the five experiments. The mean absolute ATE bias was 0.006164.
-
-The effect correlation ranged from 0.418135 to 0.804518, indicating variation in customer-level treatment-effect prediction across different holdout samples.
-
-The results demonstrate that average treatment-effect estimation is reasonably consistent, although individual treatment-effect predictions remain sensitive to the validation split.
-
-**Limitation:** The validation uses one synthetic dataset and five random seeds. Its findings should not be interpreted as proof of generalisation to real-world pricing data.
-
-**Evaluation script:** `src/evaluation/validate_dml_against_truth.py`
-
-**Individual results:** `reports/dml_truth_repeated_seed_results.csv`
-
-**Summary report:** `reports/dml_truth_repeated_seed_summary.csv`
-
+It should be interpreted alongside the repeated-seed results rather than as an isolated measure of model performance.
 
 ## 12. Automated Tests
 
-Automated tests are included in:
+The project contains four automated test files:
 
-- `tests/test_dynamic_pricing.py`
-- `tests/test_compare_dml_estimators.py`
-
-The tests cover dynamic-pricing functionality, Difference-in-Means baseline calculations, and DML evaluation metrics.
-
-The previously recorded test result was:
-
-**38 tests passed in 14.09 seconds.**
-
-A subsequent verification run in the current Python 3.13 environment produced:
-
-**38 tests passed in 6.34 seconds.**
-
-Run the test suite from the repository root:
-
-```powershell
-python -m pytest -q
+```text
+tests/
+├── test_compare_dml_estimators.py
+├── test_discount_causal_effects.py
+├── test_dynamic_pricing.py
+└── test_train_dml.py
 ```
 
-The test suite should be run again before final submission to confirm that it still passes after any subsequent code changes.
+The complete test suite was executed using:
+
+```bash
+python -m pytest -v
+```
+
+<pre>
+38 passed in 10.50s
+</pre>
+
+All 38 tests passed in the verified development environment.
+
+Additional environment checks:
+
+- Python version: 3.13.16.
+- Required package imports: successful.
+- Dependency consistency: `pip check` reported no broken requirements.
 
 ## 13. Limitations and Critical Analysis
 
-### 13.1 Synthetic Data Limitations
+### 13.1 Hillstrom Dataset Limitations
 
-The dynamic-pricing experiment uses synthetic customer data and a controlled purchase-probability formula.
+The Hillstrom dataset comes from a randomized marketing experiment, which supports causal comparisons of the campaign groups.
 
-Although this allows comparison against known simulation assumptions, it cannot fully represent real customer behaviour, market competition, inventory constraints, or operational costs.
+However:
 
-### 13.2 Observational Retail Data
+- The findings relate to the specific experiment and customer population.
+- Campaign effects may differ across customer segments.
+- Customer-level uplift estimates are harder to validate than overall treatment effects.
+- A high-performing uplift ranking should not be assumed without sufficient validation.
 
-The Online Retail dataset is observational.
+### 13.2 Uplift Model Limitations
 
-Price and quantity may be affected by product characteristics, promotions, seasonality, customer composition, and other confounding factors.
+The baseline conversion model achieved:
 
-Therefore, the observed price-quantity relationships cannot automatically be interpreted as causal price effects.
-
-### 13.3 Limitation 1 — Holdout ATE Bias and Repeated-Seed Sensitivity
-
-The initial holdout evaluation showed that the LinearDML estimated ATE was higher than the synthetic reference ATE:
-
-- True ATE: 0.074861.
-- Estimated ATE: 0.092794.
-- ATE bias: +0.017932 (approximately +1.79 percentage points).
-
-To investigate whether this result was specific to one train/test partition, the Difference-in-Means baseline and both DML estimators were evaluated across five random seeds: 42, 7, 21, 35, and 99.
-
-The repeated-seed evaluation produced the following mean absolute ATE bias:
-
-| Estimator | Mean Absolute ATE Bias |
+| Metric | Result |
 |---|---:|
-| Difference-in-Means baseline | 0.006121 |
-| LinearDML | 0.006120 |
-| NonParamDML | 0.005975 |
+| ROC-AUC | 0.5490 |
+| PR-AUC | 0.0103 |
 
-The three estimators produced very similar mean absolute ATE bias. NonParamDML had the lowest average value, while LinearDML was effectively tied with the Difference-in-Means baseline.
+The T-learner produced a mean predicted uplift of approximately 0.632 percentage points.
 
-LinearDML performed better than NonParamDML on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation. Individual-effect metrics are not applicable to the Difference-in-Means baseline because it estimates only an aggregate treatment effect.
+The estimated Qini value was 0.8665, and the estimated incremental conversions were approximately 35.707.
 
-**Seed 42 investigation:** Seed 42 was a particularly sensitive partition. The raw treatment-group purchase-rate difference was approximately 9.07% in the training set and 3.72% in the holdout set. The estimated ATEs were:
+For the top 20% of customers selected by predicted uplift, the observed treatment conversion rate was 1.531%, compared with 0.217% in the control group, giving an observed difference of approximately 1.313 percentage points.
 
-- Difference-in-Means: 0.090660.
-- LinearDML: 0.092794.
-- NonParamDML: 0.090849.
-- Synthetic reference ATE: 0.074861.
+The observed test-set ATE was approximately 0.832 percentage points, compared with the predicted mean uplift of approximately 0.632 percentage points.
 
-All three estimates were above the synthetic reference ATE on this split.
+These are exploratory results. Predicted uplift and observed treatment-control differences are not identical quantities, and the results should not be interpreted as guaranteed campaign gains.
 
-This suggests sensitivity to the train/test partition and variation in observed treatment-group outcomes. It does not establish overfitting or identify a definitive cause.
+Bootstrap comparisons did not establish statistically supported superiority of the tested uplift models:
 
-**Mitigation and further work:**
+| Comparison | Estimated difference | 95% confidence interval |
+|---|---:|---:|
+| HGB versus Random Forest Qini | 1.4925 | [-3.2586, 6.4940] |
 
-- Run additional seeds to strengthen the robustness assessment.
-- Test alternative train/test partitions.
-- Investigate treatment-outcome variation across partitions.
-- Report uncertainty intervals where statistically appropriate.
-- Evaluate the estimators under alternative synthetic data-generating scenarios.
+The confidence interval includes zero. Therefore, the available evidence does not establish that HGB outperforms Random Forest.
 
-**Limitation:** These findings are based on five evaluation seeds and a synthetic pricing dataset. They provide diagnostic evidence but are not sufficient to establish general estimator superiority or real-world pricing effectiveness.
+### 13.3 DML Holdout and Repeated-Seed Limitations
 
-### 13.4 Limitation 2 — Discount-Specific DML Accuracy and Uncertainty
+The initial holdout estimate showed a positive difference between estimated and true ATE.
 
-A separate evaluation investigated how accurately LinearDML estimates the average treatment effect (ATE) for each tested discount relative to the 0% control group. This analysis is distinct from the overall comparison of LinearDML and NonParamDML reported in Section 11.
+Repeated-seed evaluation provides additional evidence about model stability, but five random seeds are still a limited sample of possible data splits.
 
-The evaluation used four treatment levels (5%, 10%, 15%, and 20%), five train/test split seeds (42, 7, 21, 35, and 99), and a 75%/25% split stratified by treatment assignment. Each holdout set contained 2,500 customers. LinearDML was fitted with statsmodels inference to obtain 95% ATE intervals.
+Results can vary depending on:
 
-**Repeated-seed results**
+- The random seed.
+- Training and test sample composition.
+- Treatment and outcome model configurations.
+- The distribution of discount levels.
+- The definition used to calculate the reference ATE.
 
-| Discount | Mean true ATE | Mean estimated ATE | Estimate SD | Mean bias | Mean absolute bias | Mean MAE | Mean RMSE | Observed CI coverage |
+The project therefore reports both single-split and repeated-seed results instead of relying on one estimate.
+
+### 13.4 Discount-Specific LinearDML Validation
+
+Discount-specific validation compared the estimated causal effects with the known synthetic effects over five seeds.
+
+| Discount | Mean true ATE | Mean estimated ATE | Estimate SD | Mean bias | Mean absolute bias | Mean MAE | Mean RMSE | CI coverage |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 5% | 0.027647 | 0.009520 | 0.008459 | -0.018127 | 0.018127 | 0.038168 | 0.046460 | 5/5 |
 | 10% | 0.057656 | 0.059872 | 0.008990 | +0.002216 | 0.007450 | 0.029721 | 0.037043 | 5/5 |
 | 15% | 0.089559 | 0.105017 | 0.016462 | +0.015457 | 0.018848 | 0.043248 | 0.052736 | 5/5 |
 | 20% | 0.123613 | 0.135066 | 0.003993 | +0.011453 | 0.011453 | 0.024044 | 0.031343 | 5/5 |
 
-ATE values and biases in this table are proportions; multiply by 100 to express them as percentage points. For example, a bias of 0.015457 corresponds to approximately +1.55 percentage points.
+The results indicate:
 
-The 15% estimate varied most across the five splits (ATE standard deviation 0.016462) and had the largest mean absolute ATE bias (0.018848) among the four discount levels. The 5% estimate also showed meaningful underestimation (mean bias -0.018127). Therefore, the discrepancy is not limited to the 15% treatment level.
+- The 5% discount effect was underestimated on average.
+- The 10% discount estimate was closest to its reference ATE on average.
+- The 15% discount had the highest mean absolute ATE bias and the largest estimate standard deviation.
+- The 20% discount estimate was higher than its reference ATE on average.
 
-For the 15% discount, the seed-level estimated ATEs were 0.120653, 0.113216, 0.096697, 0.080189, and 0.114329. Four of the five estimates were above the corresponding synthetic reference effect, while one was below it. This indicates sensitivity to the selected split; it does not by itself establish overfitting or identify a single cause.
+All five calculated confidence intervals contained the corresponding reference ATE for each discount level.
 
-All five calculated 95% intervals contained the reference ATE for each discount in this evaluation. This is an observed result for five runs per discount, not evidence that the intervals have proven 95% coverage. A larger simulation study is required to assess interval coverage reliably.
+However, five runs are not sufficient to establish that the intervals achieve their nominal 95% coverage in general.
 
-**Nuisance-model and sample-size diagnostics**
+The treatment-model ROC-AUC was approximately 0.5. This is consistent with the randomized treatment assignment in the synthetic data and should not automatically be interpreted as model failure.
 
-The treatment model's ROC-AUC was approximately 0.500 for every discount. Because treatment assignment was randomized in the synthetic generator, a treatment-model score near 0.5 is expected and should not be interpreted as evidence of a failed treatment model.
+### 13.5 Dynamic-Pricing Limitations
 
-| Discount | Outcome-model RMSE | Outcome-model R² | Treatment ROC-AUC |
-|---|---:|---:|---:|
-| 5% | 0.408579 | 0.046232 | 0.500 |
-| 10% | 0.414323 | 0.044018 | 0.500 |
-| 15% | 0.421426 | 0.045473 | 0.500 |
-| 20% | 0.426260 | 0.052118 | 0.500 |
+The 5% discount produced the highest expected profit among the five tested pricing policies.
 
-The outcome-model R² values were modest and similar across the four discount levels. The 15% outcome RMSE was somewhat higher, but its R² was not materially different from the other groups. The discount-specific treatment-arm sample sizes were also not smallest at 15%; therefore, the diagnostics do not support attributing the 15% discrepancy simply to a uniquely small treatment group.
+However:
 
-**Interpretation and next steps**
+- The pricing data are synthetic.
+- The result depends on the assumptions used to generate customer responses.
+- Only the tested discount policies are compared.
+- Real businesses may have different costs, customer behaviour, demand patterns, and competitive conditions.
 
-These results provide a more detailed diagnostic of discount-specific ATE estimation than a single holdout split. They suggest that estimated effects can vary by discount level and train/test partition, and that average-effect accuracy and individual-effect prediction accuracy should be considered separately.
+Therefore, the result should not be interpreted as a universal pricing recommendation.
 
-Further work should:
+### 13.6 Repeated-Seed Evaluation Limitations
 
-- Increase the number of evaluation seeds beyond five.
-- Assess confidence-interval coverage over a substantially larger number of repeated simulations.
-- Evaluate all three estimators across additional random seeds and alternative synthetic data-generating scenarios.
-- Investigate both the 5% underestimation and the 15% overestimation.
-- Report ATE bias, MAE, RMSE, estimate variation, and interval coverage together.
+The five-seed evaluation is more informative than relying on a single random split.
 
-The discount-specific repeated-seed results are diagnostic evidence from a synthetic experiment. They do not establish real-world pricing effects or prove general estimator superiority.
+However, additional seeds, model configurations, sample sizes, and treatment scenarios would provide stronger evidence about generalisation and stability.
 
-### 13.5 Pricing-Policy Limitations
+### 13.7 Online Retail Limitations
 
-The 5% discount produced the highest expected profit among the five tested policies, but the improvement over no discount was only approximately 0.53%.
+The Online Retail dataset is observational.
 
-The comparison depends on the synthetic purchase-probability model and illustrative product-cost assumptions.
+The product-level correlations and regression results do not establish causal price elasticity.
 
-Additional validation is required before making any real-world pricing recommendation.
+Other factors, such as seasonality, product popularity, promotions, stock availability, and transaction composition, may influence observed sales and prices.
 
-### 13.6 Generalisation and Reproducibility
-
-The results are dependent on the selected datasets, modelling assumptions, and evaluation partitions.
-
-The five-seed evaluation provides more evidence than a single holdout split, but additional seeds and alternative data-generating scenarios are needed to assess robustness more thoroughly.
-
-The reported results should be reproduced from the repository before final submission.
+The limited monthly observations also restrict the strength of statistical conclusions.
 
 ## 14. Scientific Conclusion
 
-The EconoCausal project demonstrates how causal inference, machine learning, and statistical analysis can support customer-level decision-making and pricing-policy evaluation.
+EconoCausal demonstrates how causal inference and machine learning can be applied to customer analytics and dynamic pricing.
 
-The Hillstrom randomized marketing experiment provides evidence about the effects of email campaigns on customer visits and conversions. The Online Retail dataset provides an opportunity to explore historical product sales, price variations, and demand patterns. The synthetic pricing experiment allows treatment-effect estimators and pricing policies to be evaluated against known simulation assumptions. These three components address different analytical questions and should be interpreted separately.
+The Hillstrom experiment supports the analysis of email marketing treatment effects and provides an opportunity to explore customer uplift.
 
-In the synthetic pricing experiment, the mean absolute ATE bias across five evaluation seeds was 0.006121 for Difference-in-Means, 0.006120 for LinearDML, and 0.005975 for NonParamDML. These values are very close. NonParamDML had the lowest average ATE bias, while LinearDML was effectively tied with the aggregate baseline.
+The synthetic pricing dataset allows DML estimates to be compared against known ground-truth treatment effects. Holdout and repeated-seed evaluations show why causal estimates should be examined across multiple data splits.
 
-LinearDML performed better than NonParamDML on individual treatment-effect prediction metrics, including MAE, RMSE, and effect correlation. Individual-effect metrics are not applicable to Difference-in-Means because it estimates only an aggregate treatment effect.
+The pricing-policy comparison identifies the 5% discount as the highest-profit option among the five tested synthetic policies. This finding is specific to the assumptions of the generated dataset and does not establish a real-world optimal discount.
 
-The repeated-seed analysis also revealed sensitivity to the train/test partition, particularly for seed 42. These results are limited to five evaluation seeds and a synthetic pricing dataset; they do not establish general estimator superiority or real-world pricing effectiveness.
+The Online Retail analysis provides exploratory evidence about product prices and sales. None of the five examined product-level price-quantity correlations was statistically significant at the 5% level, and the observational data do not support causal conclusions.
 
-The synthetic dynamic-pricing comparison identified the 5% discount as the highest-profit option among the five tested policies. However, its advantage over the no-discount policy was approximately 0.53%. Since the experiment uses synthetic customer data and illustrative product-cost assumptions, this finding does not establish that a 5% discount is optimal for a real business.
-
-The Online Retail analysis did not identify a statistically significant price-quantity relationship among the five selected products or in the pooled regression. Because the data are observational and the analysis has limited product-level monthly observations, these findings should be interpreted as exploratory rather than causal evidence about price elasticity.
-
-Overall, the project provides a foundation for studying randomized marketing effects, observational product-demand patterns, synthetic causal estimation, and pricing-policy evaluation. Further work should focus on additional robustness checks, sensitivity analysis, realistic cost assumptions, and appropriate real-world validation.
-
-The project demonstrates the importance of evaluating not only model predictions but also estimation error, experimental assumptions, reproducibility, and business relevance. Its current results are useful for research and educational purposes but should not be treated as validated real-world pricing recommendations.
+Overall, the project demonstrates a reproducible workflow for causal analysis, model validation, and pricing-policy evaluation while acknowledging the limitations of synthetic and observational data.
 
 ## 15. Future Improvements and Development Roadmap
 
-### Phase 1 — Current Project Foundation
+Potential future improvements include:
 
-- Complete the initial data analysis.
-- Implement the synthetic pricing experiment.
-- Implement and compare DML estimators.
-- Evaluate candidate discount policies.
-- Add automated tests and project documentation.
-
-### Phase 2 — Robustness and Validation
-
-- Extend the overall and discount-specific five-seed evaluations using additional random seeds and alternative data partitions.
-- Investigate treatment-effect estimation stability.
-- Extend uncertainty-interval evaluation and assess interval coverage over more repeated simulations.
-- Test alternative synthetic data-generating scenarios.
-- Improve the validation of individual treatment-effect estimates.
-
-### Phase 3 — Pricing Model Improvements
-
-- Explore multi-treatment discount estimation.
-- Investigate customer-level pricing recommendations.
-- Evaluate alternative pricing and profit assumptions.
-- Consider inventory, competition, and operational constraints.
-- Compare additional pricing policies.
-
-### Phase 4 — Final Project Delivery
-
-- Reproduce all reported results.
-- Run the complete automated test suite.
-- Review project structure and documentation.
-- Prepare final visualisations and analysis reports.
-- Verify GitHub repository completeness.
-- Prepare the final project report and presentation.
+1. Evaluate DML models across more random seeds.
+2. Test additional treatment and outcome model configurations.
+3. Examine larger and more diverse synthetic pricing scenarios.
+4. Explore alternative causal estimators.
+5. Improve customer-level uplift evaluation.
+6. Investigate additional uncertainty-estimation methods.
+7. Incorporate more realistic pricing constraints and business costs.
+8. Explore stronger time-series methods for retail demand analysis.
+9. Evaluate the methodology using real-world randomized pricing experiments where available.
+10. Improve automated reporting and reproducibility checks.
 
 ## 16. Project Success Criteria
 
-The project aims to demonstrate:
+The project aims to meet the following criteria:
 
-- Correct handling and preprocessing of multiple datasets.
-- Appropriate separation of randomized, observational, and synthetic analyses.
-- Application of causal inference methods.
-- Comparison of DML estimators against a baseline.
-- Evaluation using known synthetic reference effects.
-- Repeated-seed robustness analysis.
-- Comparison of pricing policies using expected profit.
-- Reusable Python code and automated testing.
-- Clear documentation of assumptions, results, and limitations.
-- Reproducible project execution.
+- Integrate multiple datasets for customer and retail analysis.
+- Perform exploratory data analysis and data preprocessing.
+- Estimate treatment effects using causal inference methods.
+- Compare causal estimates against known synthetic ground truth.
+- Evaluate model performance using holdout and repeated-seed validation.
+- Compare discount policies using expected revenue and expected profit.
+- Maintain modular Python source code.
+- Provide automated tests for key project functionality.
+- Document data sources, methods, results, and limitations.
+- Maintain a reproducible project structure and GitHub repository.
 
 ## 17. Team Note
 
-This project is being developed as part of the Infotact internship programme.
+This project was developed as part of the EconoCausal Dynamic Pricing internship project.
 
-The work combines data analysis, machine learning, causal inference, and business-oriented pricing evaluation.
+The work combines exploratory data analysis, synthetic data generation, causal machine learning, pricing-policy evaluation, validation, and documentation.
 
-The repository is maintained collaboratively, with development changes tracked through Git and GitHub.
+The project uses both randomized experimental data and observational retail data, alongside synthetic data with known causal effects. Findings are interpreted according to the strengths and limitations of each data source.
 
-**Repository:** [EconoCausal-Dynamic-Pricing](https://github.com/fahmaparveen3-arch/EconoCausal-Dynamic-Pricing)
-
-**Development branch:** `Hiba`
-
----
-
-**Project status:** The project has a working analytical foundation, recorded validation results, pricing-policy comparisons, and automated tests. Both exploratory notebooks have been run successfully in the current development environment, and the automated test suite has passed with 38 tests. Final reproducibility checks, integration review, and submission-quality verification remain necessary before claiming full project completion.
+**Project status:** Integration and reproducibility checks and the automated test suite have been completed in the current development environment. Final documentation and submission-quality review are being completed.
