@@ -98,3 +98,30 @@ def test_boundary_discount_rates_are_accepted():
 
     assert not any("discount_rate" in issue for issue in issues)
     assert not any("Discounted prices" in issue for issue in issues)
+
+def test_non_numeric_income_is_reported():
+    df = make_valid_data()
+    df["income"] = df["income"].astype(object)
+    df.loc[0, "income"] = "invalid"
+
+    issues = validate_pricing_data(df)
+
+    assert any("numeric" in issue.lower() for issue in issues)
+
+
+def test_blank_product_category_is_reported():
+    df = make_valid_data()
+    df.loc[0, "product_category"] = "   "
+
+    issues = validate_pricing_data(df)
+
+    assert any("product_category" in issue for issue in issues)
+
+
+def test_negative_discounted_price_is_reported():
+    df = make_valid_data()
+    df.loc[0, "discounted_price"] = -10.0
+
+    issues = validate_pricing_data(df)
+
+    assert any("discounted_price" in issue for issue in issues)

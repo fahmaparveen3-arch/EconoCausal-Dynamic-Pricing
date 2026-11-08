@@ -1,4 +1,5 @@
 
+
 """Validation utilities for the EconoCausal pricing dataset."""
 
 import pandas as pd
@@ -10,6 +11,21 @@ REQUIRED_COLUMNS = {
     "income",
     "past_purchases",
     "product_category",
+    "original_price",
+    "discount_rate",
+    "treatment",
+    "purchase",
+    "units_sold",
+    "discounted_price",
+    "revenue",
+    "discount_cost",
+    "purchase_probability",
+}
+
+NUMERIC_COLUMNS = {
+    "age",
+    "income",
+    "past_purchases",
     "original_price",
     "discount_rate",
     "treatment",
@@ -43,6 +59,22 @@ def validate_pricing_data(df: pd.DataFrame) -> list[str]:
     if df["customer_id"].duplicated().any():
         issues.append("Duplicate customer_id values found.")
 
+    # Check that numeric columns contain numeric data.
+    invalid_numeric_columns = []
+
+    for column in NUMERIC_COLUMNS:
+        if not pd.api.types.is_numeric_dtype(df[column]):
+            issues.append(f"{column} must contain numeric values.")
+            invalid_numeric_columns.append(column)
+
+    # Check product categories for blank values.
+    if not df["product_category"].astype(str).str.strip().ne("").all():
+        issues.append("product_category cannot contain blank values.")
+
+    # Stop numeric comparisons for columns containing non-numeric data.
+    if invalid_numeric_columns:
+        return issues
+
     if (df["age"] <= 0).any():
         issues.append("Age must be greater than zero.")
 
@@ -57,6 +89,9 @@ def validate_pricing_data(df: pd.DataFrame) -> list[str]:
 
     if not df["discount_rate"].between(0, 1).all():
         issues.append("discount_rate must be between 0 and 1.")
+
+    if (df["discounted_price"] < 0).any():
+        issues.append("discounted_price cannot be negative.")
 
     expected_prices = (
         df["original_price"] * (1 - df["discount_rate"])
