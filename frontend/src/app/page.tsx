@@ -59,33 +59,7 @@ const navigation = [
   { name: "Model Insights" as Section, icon: Brain },
 ];
 
-const pricingData = [
-  { discount: "0%", profit: 33.24, revenue: 58.2 },
-  { discount: "5%", profit: 33.42, revenue: 57.8 },
-  { discount: "10%", profit: 32.85, revenue: 55.6 },
-  { discount: "15%", profit: 31.41, revenue: 52.1 },
-  { discount: "20%", profit: 28.93, revenue: 48.4 },
-];
-
-const treatmentData = [
-  { segment: "Men's Email", effect: 0.681, lower: 0.501, upper: 0.864 },
-  { segment: "Women's Email", effect: 0.311, lower: 0.150, upper: 0.475 },
-];
-
-const segmentData = [
-  { name: "Men's Email", value: 21307 },
-  { name: "Women's Email", value: 21387 },
-  { name: "No Email", value: 21306 },
-];
-
 const segmentColors = ["#10b981", "#3b82f6", "#64748b"];
-
-const modelMetrics = [
-  { label: "Qini coefficient", value: "0.8665", description: "Uplift model ranking metric" },
-  { label: "Predicted uplift", value: "+0.632 pp", description: "T-learner estimated uplift" },
-  { label: "Top 20% uplift", value: "+1.313 pp", description: "Observed uplift in top segment" },
-  { label: "DML holdout ATE", value: "0.0928", description: "Synthetic validation estimate" },
-];
 
 const tooltipStyle = {
   backgroundColor: "#111827",
@@ -192,6 +166,70 @@ export default function Home() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [themeReady, setThemeReady] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [apiData, setApiData] = useState<{
+    overview: any;
+    pricing: any;
+    causal: any;
+    uplift: any;
+    modelInsights: any;
+  } | null>(null);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadDashboardData() {
+      try {
+        setApiLoading(true);
+        setApiError("");
+
+        const endpoints = [
+          "overview",
+          "pricing",
+          "causal",
+          "uplift",
+          "model-insights",
+        ];
+
+        const responses = await Promise.all(
+          endpoints.map((endpoint) =>
+            fetch(`http://127.0.0.1:8000/api/${endpoint}`, {
+              signal: controller.signal,
+            })
+          )
+        );
+
+        const failedResponse = responses.find((response) => !response.ok);
+        if (failedResponse) {
+          throw new Error(`Backend request failed: ${failedResponse.status}`);
+        }
+
+        const [overview, pricing, causal, uplift, modelInsights] =
+          await Promise.all(responses.map((response) => response.json()));
+
+        if (!controller.signal.aborted) {
+          setApiData({ overview, pricing, causal, uplift, modelInsights });
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setApiError(
+            error instanceof Error ? error.message : "Unable to load dashboard data."
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setApiLoading(false);
+        }
+      }
+    }
+
+    loadDashboardData();
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("econocausal-theme");
@@ -213,6 +251,79 @@ export default function Home() {
   }, [theme, themeReady]);
 
   const isDark = theme === "dark";
+  const pricingData = apiData?.pricing?.policies?.map((item: any) => ({
+    discount: item.discount,
+    profit: item.profit,
+    revenue: item.revenue,
+  })) ?? [];
+
+  const treatmentData = apiData?.causal?.effects ?? [];
+  const segmentData = apiData?.causal?.segment_counts ?? [];
+
+  const searchableData: { section: Section; data: any }[] = apiData
+    ? [
+        { section: "Overview", data: apiData.overview },
+        { section: "Pricing Analytics", data: apiData.pricing },
+        { section: "Causal Analysis", data: apiData.causal },
+        { section: "Uplift Analysis", data: apiData.uplift },
+        { section: "Model Insights", data: apiData.modelInsights },
+      ]
+    : [];
+
+  const searchIndex = searchableData.flatMap(({ section, data }) => {
+    const items: { section: Section; label: string; value: string }[] = [];
+
+    const collect = (value: any, label: string) => {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => collect(item, `${label} ${index + 1}`));
+      } else if (value !== null && typeof value === "object") {
+        Object.entries(value).forEach(([key, nested]) =>
+          collect(nested, `${label} ${key.replace(/_/g, " ")}`)
+        );
+      } else if (value !== null && value !== undefined) {
+        items.push({ section, label, value: String(value) });
+      }
+    };
+
+    collect(data, section);
+    return items;
+  });
+
+  const searchResults = searchQuery.trim()
+    ? searchIndex
+        .filter((item) =>
+          `${item.section} ${item.label} ${item.value}`
+            .toLowerCase()
+            .includes(searchQuery.trim().toLowerCase())
+        )
+        .slice(0, 10)
+    : [];
+
+  const modelMetrics = apiData
+    ? [
+        {
+          label: "Qini coefficient",
+          value: String(apiData.uplift.metrics.qini_coefficient),
+          description: "Uplift model ranking metric",
+        },
+        {
+          label: "Predicted uplift",
+          value: `+${apiData.uplift.metrics.predicted_mean_uplift} pp`,
+          description: "T-learner estimated uplift",
+        },
+        {
+          label: "Top 20% uplift",
+          value: `+${apiData.uplift.metrics.top_20_percent_uplift} pp`,
+          description: "Observed uplift in top segment",
+        },
+        {
+          label: "DML holdout ATE",
+          value: apiData.modelInsights.primary_validation.estimated_ate.toFixed(4),
+          description: "Synthetic validation estimate",
+        },
+      ]
+    : [];
+
 
   const pageBackground = isDark
     ? "bg-[#080f1c] text-white"
@@ -248,13 +359,13 @@ export default function Home() {
       "",
       "Pricing analysis (synthetic dataset)",
       ...pricingData.map(
-        (item) =>
+        (item: any) =>
           `Discount: ${item.discount}, Expected profit/customer: $${item.profit}`
       ),
       "",
       "Hillstrom treatment effects",
       ...treatmentData.map(
-        (item) =>
+        (item: any) =>
           `${item.segment}: +${item.effect} percentage points`
       ),
       "",
@@ -435,17 +546,98 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-              <div
-                className={`hidden items-center gap-2 rounded-xl border px-3 py-2 md:flex ${
-                  isDark
-                    ? "border-slate-700 bg-slate-900"
-                    : "border-slate-200 bg-slate-50"
-                }`}
-              >
-                <Search size={15} className="text-slate-500" />
-                <span className="text-xs text-slate-500">
-                  Analytics workspace
-                </span>
+              <div className="relative hidden md:block">
+                <div
+                  className={`flex w-64 items-center gap-2 rounded-xl border px-3 py-2 ${
+                    isDark
+                      ? "border-slate-700 bg-slate-900"
+                      : "border-slate-200 bg-slate-50"
+                  }`}
+                >
+                  <Search size={15} className="shrink-0 text-slate-500" />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value);
+                      setSearchOpen(true);
+                    }}
+                    onFocus={() => setSearchOpen(true)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        setSearchOpen(false);
+                        event.currentTarget.blur();
+                      }
+                    }}
+                    placeholder="Search dashboard..."
+                    aria-label="Search all dashboard content"
+                    className={`w-full bg-transparent text-xs outline-none ${
+                      isDark
+                        ? "text-white placeholder:text-slate-500"
+                        : "text-slate-900 placeholder:text-slate-400"
+                    }`}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSearchOpen(false);
+                      }}
+                      aria-label="Clear search"
+                      className="text-slate-500 hover:text-slate-300"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {searchOpen && searchQuery.trim() && (
+                  <div
+                    className={`absolute right-0 top-full z-50 mt-2 max-h-80 w-80 overflow-y-auto rounded-xl border p-2 shadow-xl ${
+                      isDark
+                        ? "border-slate-700 bg-slate-900"
+                        : "border-slate-200 bg-white"
+                    }`}
+                  >
+                    {apiLoading ? (
+                      <p className="p-3 text-xs text-slate-500">
+                        Loading dashboard data...
+                      </p>
+                    ) : searchResults.length > 0 ? (
+                      searchResults.map((result, index) => (
+                        <button
+                          type="button"
+                          key={`${result.section}-${result.label}-${index}`}
+                          onClick={() => {
+                            changeSection(result.section);
+                            setSearchOpen(false);
+                          }}
+                          className={`block w-full rounded-lg px-3 py-2 text-left transition ${
+                            isDark
+                              ? "hover:bg-slate-800"
+                              : "hover:bg-slate-100"
+                          }`}
+                        >
+                          <span className="block text-xs font-semibold text-emerald-500">
+                            {result.section}
+                          </span>
+                          <span
+                            className={`mt-1 block break-words text-xs ${
+                              isDark ? "text-slate-300" : "text-slate-600"
+                            }`}
+                          >
+                            {result.label}: {result.value}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="p-3 text-xs text-slate-500">
+                        No matching dashboard content found.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <button
@@ -519,28 +711,28 @@ export default function Home() {
                     <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                       <MetricCard
                         title="Customers analysed"
-                        value="64,000"
+                        value={apiData?.overview?.customers_analysed?.toLocaleString() ?? "Loading..."}
                         change="Hillstrom dataset"
                         icon={Users}
                         description="Randomized marketing experiment"
                       />
                       <MetricCard
                         title="Best synthetic discount"
-                        value="5%"
+                        value={apiData?.overview?.best_discount ?? "Loading..."}
                         change="Highest expected profit"
                         icon={TrendingUp}
-                        description="$33.42 expected profit/customer"
+                        description={apiData?.overview?.expected_profit_per_customer != null ? `$${apiData.overview.expected_profit_per_customer.toFixed(2)} expected profit/customer` : "Loading pricing result"}
                       />
                       <MetricCard
                         title="Uplift model Qini"
-                        value="0.8665"
+                        value={apiData?.overview?.qini_coefficient?.toFixed(4) ?? "Loading..."}
                         change="Model metric"
                         icon={Target}
                         description="T-learner uplift evaluation"
                       />
                       <MetricCard
                         title="Treatment effect"
-                        value="+0.681 pp"
+                        value={apiData?.causal?.effects?.find((item: any) => item.segment === "Men's Email") ? `+${apiData.causal.effects.find((item: any) => item.segment === "Men's Email").effect.toFixed(3)} pp` : "Loading..."}
                         change="Men's Email"
                         icon={Activity}
                         description="Compared with No Email"
@@ -630,7 +822,7 @@ export default function Home() {
                                   outerRadius={90}
                                   paddingAngle={4}
                                 >
-                                  {segmentData.map((entry, index) => (
+                                  {segmentData.map((entry: any, index: number) => (
                                     <Cell
                                       key={entry.name}
                                       fill={segmentColors[index]}
@@ -643,7 +835,7 @@ export default function Home() {
                           </div>
 
                           <div className="space-y-5">
-                            {segmentData.map((segment, index) => (
+                            {segmentData.map((segment: any, index: number) => (
                               <div key={segment.name}>
                                 <div className="flex items-center gap-2">
                                   <span
@@ -752,19 +944,19 @@ export default function Home() {
                     <div className="mb-6 grid gap-4 sm:grid-cols-3">
                       <MetricCard
                         title="Best tested discount"
-                        value="5%"
+                        value={apiData?.pricing?.best_policy?.discount ?? "Loading..."}
                         icon={TrendingUp}
                         description="Highest expected profit in this experiment"
                       />
                       <MetricCard
                         title="Expected profit"
-                        value="$33.42"
+                        value={apiData?.pricing?.best_policy?.profit != null ? `$${apiData.pricing.best_policy.profit.toFixed(2)}` : "Loading..."}
                         icon={ShoppingCart}
-                        description="Per customer at 5% discount"
+                        description={apiData?.pricing?.best_policy?.discount ? `Per customer at ${apiData.pricing.best_policy.discount} discount` : "Loading pricing result"}
                       />
                       <MetricCard
                         title="Dataset size"
-                        value="10,000"
+                        value={apiData?.pricing?.customers?.toLocaleString() ?? "Loading..."}
                         icon={Users}
                         description="Synthetic pricing records"
                       />
@@ -800,7 +992,7 @@ export default function Home() {
                               radius={[8, 8, 0, 0]}
                               barSize={48}
                             >
-                              {pricingData.map((entry, index) => (
+                              {pricingData.map((entry: any, index: number) => (
                                 <Cell
                                   key={entry.discount}
                                   fill={index === 1 ? "#10b981" : "#3b82f6"}
@@ -835,7 +1027,7 @@ export default function Home() {
                             </tr>
                           </thead>
                           <tbody>
-                            {pricingData.map((item, index) => (
+                            {pricingData.map((item: any, index: number) => (
                               <tr
                                 key={item.discount}
                                 className="border-t border-slate-700/40"
@@ -886,13 +1078,13 @@ export default function Home() {
                     <div className="mb-6 grid gap-4 sm:grid-cols-2">
                       <MetricCard
                         title="Men's Email effect"
-                        value="+0.681 pp"
+                        value={treatmentData.find((item: any) => item.segment === "Men's Email") ? `+${treatmentData.find((item: any) => item.segment === "Men's Email").effect.toFixed(3)} pp` : "Loading..."}
                         icon={ArrowUpRight}
                         description="Compared with No Email"
                       />
                       <MetricCard
                         title="Women's Email effect"
-                        value="+0.311 pp"
+                        value={treatmentData.find((item: any) => item.segment === "Women's Email") ? `+${treatmentData.find((item: any) => item.segment === "Women's Email").effect.toFixed(3)} pp` : "Loading..."}
                         icon={ArrowUpRight}
                         description="Compared with No Email"
                       />
@@ -952,10 +1144,10 @@ export default function Home() {
                           </h3>
                         </div>
                         <p className="text-3xl font-bold text-emerald-400">
-                          +0.681 pp
+                          {treatmentData.find((item: any) => item.segment === "Men's Email") ? `+${treatmentData.find((item: any) => item.segment === "Men's Email").effect.toFixed(3)} pp` : "Loading..."}
                         </p>
                         <p className={`mt-3 text-sm ${secondaryText}`}>
-                          95% confidence interval: [0.501, 0.864]
+                          95% confidence interval: [{treatmentData.find((item: any) => item.segment === "Men's Email")?.lower.toFixed(3) ?? "?"}, {treatmentData.find((item: any) => item.segment === "Men's Email")?.upper.toFixed(3) ?? "?"}]
                         </p>
                         <p className="mt-2 text-xs text-emerald-400">
                           Statistically significant
@@ -970,13 +1162,13 @@ export default function Home() {
                           </h3>
                         </div>
                         <p className="text-3xl font-bold text-emerald-400">
-                          +0.311 pp
+                          {treatmentData.find((item: any) => item.segment === "Women's Email") ? `+${treatmentData.find((item: any) => item.segment === "Women's Email").effect.toFixed(3)} pp` : "Loading..."}
                         </p>
                         <p className={`mt-3 text-sm ${secondaryText}`}>
-                          95% confidence interval: [0.150, 0.475]
+                          95% confidence interval: [{treatmentData.find((item: any) => item.segment === "Women's Email")?.lower.toFixed(3) ?? "?"}, {treatmentData.find((item: any) => item.segment === "Women's Email")?.upper.toFixed(3) ?? "?"}]
                         </p>
                         <p className="mt-2 text-xs text-emerald-400">
-                          Statistically significant · p = 0.000157
+                          Statistically significant | p = {treatmentData.find((item: any) => item.segment === "Women's Email")?.p_value?.toExponential(2) ?? "?"}
                         </p>
                       </div>
                     </div>
@@ -1007,19 +1199,19 @@ export default function Home() {
                     <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                       <MetricCard
                         title="Qini coefficient"
-                        value="0.8665"
+                        value={apiData?.uplift?.metrics?.qini_coefficient?.toFixed(4) ?? "Loading..."}
                         icon={Target}
                         description="Uplift model ranking metric"
                       />
                       <MetricCard
                         title="Predicted uplift"
-                        value="+0.632 pp"
+                        value={apiData?.uplift?.metrics?.predicted_mean_uplift != null ? `+${apiData.uplift.metrics.predicted_mean_uplift.toFixed(3)} pp` : "Loading..."}
                         icon={TrendingUp}
                         description="T-learner estimated uplift"
                       />
                       <MetricCard
                         title="Top 20% uplift"
-                        value="+1.313 pp"
+                        value={apiData?.uplift?.metrics?.top_20_percent_uplift != null ? `+${apiData.uplift.metrics.top_20_percent_uplift.toFixed(3)} pp` : "Loading..."}
                         icon={Users}
                         description="Observed uplift in top-ranked group"
                       />
@@ -1033,9 +1225,9 @@ export default function Home() {
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
                             data={[
-                              { metric: "Predicted uplift", value: 0.632 },
-                              { metric: "Observed test ATE", value: 0.832 },
-                              { metric: "Top 20% uplift", value: 1.313 },
+                              { metric: "Predicted uplift", value: apiData?.uplift?.metrics?.predicted_mean_uplift ?? 0 },
+                              { metric: "Observed test ATE", value: apiData?.uplift?.metrics?.observed_test_ate ?? 0 },
+                              { metric: "Top 20% uplift", value: apiData?.uplift?.metrics?.top_20_percent_uplift ?? 0 },
                             ]}
                           >
                             <CartesianGrid
@@ -1128,7 +1320,7 @@ export default function Home() {
                               Holdout true ATE
                             </span>
                             <span className="font-semibold text-white">
-                              0.074861
+                              {apiData?.modelInsights?.primary_validation?.true_ate?.toFixed(6) ?? "Loading..."}
                             </span>
                           </div>
                           <div className="flex items-center justify-between border-b border-slate-700/50 pb-3">
@@ -1136,7 +1328,7 @@ export default function Home() {
                               Holdout estimated ATE
                             </span>
                             <span className="font-semibold text-emerald-400">
-                              0.092794
+                              {apiData?.modelInsights?.primary_validation?.estimated_ate?.toFixed(6) ?? "Loading..."}
                             </span>
                           </div>
                           <div className="flex items-center justify-between border-b border-slate-700/50 pb-3">
@@ -1144,7 +1336,7 @@ export default function Home() {
                               Holdout MAE
                             </span>
                             <span className="font-semibold text-white">
-                              0.020994
+                              {apiData?.modelInsights?.primary_validation?.mae?.toFixed(6) ?? "Loading..."}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -1152,7 +1344,7 @@ export default function Home() {
                               Holdout RMSE
                             </span>
                             <span className="font-semibold text-white">
-                              0.024203
+                              {apiData?.modelInsights?.primary_validation?.rmse?.toFixed(6) ?? "Loading..."}
                             </span>
                           </div>
                         </div>
