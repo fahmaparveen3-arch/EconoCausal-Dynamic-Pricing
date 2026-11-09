@@ -125,3 +125,20 @@ def test_negative_discounted_price_is_reported():
     issues = validate_pricing_data(df)
 
     assert any("discounted_price" in issue for issue in issues)
+
+def test_inconsistent_revenue_is_reported():
+    df = make_valid_data()
+    df.loc[0, "revenue"] = 150.0
+
+    issues = validate_pricing_data(df)
+
+    assert any("revenue" in issue.lower() for issue in issues)
+
+
+def test_inconsistent_discount_cost_is_reported():
+    df = make_valid_data()
+    df.loc[0, "discount_cost"] = 25.0
+
+    issues = validate_pricing_data(df)
+
+    assert any("discount cost" in issue.lower() for issue in issues)

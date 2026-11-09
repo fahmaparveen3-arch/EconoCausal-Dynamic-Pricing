@@ -102,6 +102,27 @@ def validate_pricing_data(df: pd.DataFrame) -> list[str]:
     ).all():
         issues.append("Discounted prices do not match the discount rates.")
 
+    # Validate revenue calculations.
+    expected_revenue = (
+        df["discounted_price"] * df["units_sold"]
+    ).round(2)
+
+    if not (
+        (df["revenue"] - expected_revenue).abs() <= 0.01
+    ).all():
+        issues.append("Revenue does not match discounted price multiplied by units sold.")
+
+    # Validate discount cost calculations.
+    expected_discount_cost = (
+        (df["original_price"] - df["discounted_price"])
+        * df["units_sold"]
+    ).round(2)
+
+    if not (
+        (df["discount_cost"] - expected_discount_cost).abs() <= 0.01
+    ).all():
+        issues.append("Discount cost does not match the calculated discount amount.")
+
     if not df["treatment"].isin([0, 1]).all():
         issues.append("treatment must contain only 0 or 1.")
 
