@@ -7,9 +7,6 @@ __pycache__/
 .venv*/
 venv/
 
-# Local dataset
-data/hillstrom.csv
-
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
