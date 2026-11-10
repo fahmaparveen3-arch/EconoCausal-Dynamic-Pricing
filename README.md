@@ -43,11 +43,21 @@ The main objectives are:
 | Automated testing | Pytest |
 | Development environment | VS Code |
 | Version control | Git and GitHub |
+| Backend | FastAPI |
+| Frontend | Next.js |
 
 ## 4. Project Structure
 
 ```text
 EconoCausal-Dynamic-Pricing/
+│
+├── backend/
+│   └── main.py
+│
+├── frontend/
+│   └── src/
+│       └── app/
+│           └── page.tsx
 │
 ├── data/
 │   ├── hillstrom.csv
@@ -122,6 +132,8 @@ EconoCausal-Dynamic-Pricing/
 ```
 
 **Data and generated files:** Some local datasets and generated outputs are intentionally excluded from Git through `.gitignore`. In particular, the local Hillstrom CSV, raw Online Retail files, processed files, and prepared pricing dataset are not necessarily included in a fresh clone. The tracked synthetic pricing dataset and report files are maintained separately.
+
+**Historical reports:** `dml_estimator_comparison.csv` and `dml_truth_holdout_validation.csv` are retained historical outputs. They are not used as the latest validation results documented in Section 11.
 
 ## 5. Datasets
 
@@ -351,12 +363,9 @@ Each evaluation uses a stratified 75/25 train-test split.
 
 The same holdout partitions are used for the estimators being compared within each seed.
 
-Two ground-truth averaging definitions are used in separate evaluation scripts:
+Both `compare_dml_estimators.py` and `validate_dml_against_truth.py` calculate the reference ATE using the empirical proportions of the four discount levels among treated customers.
 
-- `compare_dml_estimators.py` calculates the reference ATE using equal weighting across the four discount levels.
-- `validate_dml_against_truth.py` calculates the reference ATE using the empirical proportions of discount levels among treated customers.
-
-These are different evaluation definitions. Their reference ATE values should not be mixed or treated as duplicate results. The estimated LinearDML ATEs can be the same while the reference ATE and calculated bias differ.
+Reference ATE values can differ across evaluation runs because the data splits, seeds, and evaluation designs may differ. Results should therefore be compared only when they come from compatible evaluation settings.
 
 ### 7.6 Online Retail Price and Demand Analysis
 
@@ -450,9 +459,9 @@ pip install -r requirements.txt
 
 The project's development environment was verified using Python 3.13.16. All pinned dependencies installed successfully, and `pip check` reported no broken requirements.
 
-## 9. Running Project
+## 9. Running the Project
 
-Run commands from the repository root.
+Run Python commands from the repository root.
 
 ### 9.1 Generate Synthetic Pricing Data
 
@@ -504,7 +513,7 @@ python -m src.evaluation.compare_dml_estimators
 
 This evaluates the DML estimators over five random seeds and generates repeated-seed result and summary reports.
 
-The script uses equal weighting across the four discount levels when calculating its reference average treatment effect.
+The script calculates its reference average treatment effect using the empirical proportions of discount levels among treated customers.
 
 ### 9.6 Preprocess Online Retail Data
 
@@ -544,14 +553,38 @@ The raw Online Retail Excel dataset must be available at:
 data/online+retail/Online Retail.xlsx
 ```
 
+### 9.9 Run the Dashboard
+
+The project includes a FastAPI backend and a Next.js frontend.
+
+**Start the backend:**
+
+From the repository root, activate the Python virtual environment and run:
+
+```bash
+python -m uvicorn backend.main:app --reload
+```
+
+**Start the frontend:**
+
+Open a separate terminal and navigate to the frontend directory:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the local frontend address displayed in the terminal. The backend API runs separately and provides the data used by the dashboard.
+
 ## 10. Pricing-Policy Results
 
 The synthetic pricing-policy comparison evaluates five discount rates.
 
 | Discount rate | Expected purchase rate | Expected revenue per customer | Expected profit per customer | Total expected revenue | Total expected profit |
 |---:|---:|---:|---:|---:|---:|
-| 5% | 0.2354 | 82.17 | 33.42 | 821,743.83 | 334,186.01 |
 | 0% | 0.2078 | 76.16 | 33.24 | 761,609.82 | 332,435.25 |
+| 5% | 0.2354 | 82.17 | 33.42 | 821,743.83 | 334,186.01 |
 | 10% | 0.2653 | 87.95 | 32.85 | 879,531.41 | 328,546.76 |
 | 15% | 0.2972 | 93.33 | 31.41 | 933,261.15 | 314,052.64 |
 | 20% | 0.3311 | 98.11 | 28.93 | 981,100.87 | 289,266.88 |
@@ -589,11 +622,11 @@ The holdout evaluation used a 75/25 split, producing 2,500 test customers.
 | Metric | Result |
 |---|---:|
 | Holdout customers | 2,500 |
-| True ATE | 0.074861 |
+| True ATE | 0.074642 |
 | Estimated ATE | 0.092794 |
-| Bias | +0.017932 |
-| MAE | 0.020994 |
-| RMSE | 0.024203 |
+| Bias | +0.018151 |
+| MAE | 0.021127 |
+| RMSE | 0.024365 |
 
 The holdout estimate is higher than the reference ATE. This difference demonstrates why a single train-test split should not be treated as sufficient evidence of model stability.
 
@@ -601,22 +634,22 @@ The holdout estimate is higher than the reference ATE. This difference demonstra
 
 Five seeds were used to compare Difference-in-Means, LinearDML, and NonParamDML with Gradient Boosting.
 
-The estimator comparison summary uses equal weighting across the four discount levels to calculate the reference ATE.
+The comparison uses empirical discount-level proportions among treated customers to calculate the reference ATE. Each estimator was evaluated over five random seeds, with 2,500 holdout customers per run.
 
 | Metric | Difference-in-Means | LinearDML | NonParamDML |
 |---|---:|---:|---:|
 | Mean estimated ATE | 0.077594 | 0.078459 | 0.078441 |
-| Mean bias | +0.003091 | +0.003956 | +0.003938 |
-| Mean absolute bias | 0.006121 | 0.006120 | 0.005975 |
-| Bias standard deviation | 0.008180 | 0.008500 | 0.007810 |
+| Mean bias | +0.003502 | +0.004367 | +0.004350 |
+| Mean absolute bias | 0.005759 | 0.005758 | 0.005613 |
+| Bias standard deviation | 0.007013 | 0.007251 | 0.006600 |
 
 Additional individual-effect metrics:
 
-| Metric | LinearDML | NonParamDML |
-|---|---:|---:|
-| Mean MAE | 0.018963 | 0.035780 |
-| Mean RMSE | 0.023124 | 0.050144 |
-| Mean effect correlation | 0.617833 | 0.231091 |
+| Metric | Difference-in-Means | LinearDML | NonParamDML |
+|---|---:|---:|---:|
+| Mean MAE | N/A | 0.018630 | 0.035615 |
+| Mean RMSE | N/A | 0.022803 | 0.050003 |
+| Mean effect correlation | N/A | 0.617875 | 0.231011 |
 
 The Difference-in-Means baseline estimates the overall treatment effect but does not provide the individual treatment-effect predictions required for the individual-effect MAE, RMSE, and correlation metrics.
 
@@ -626,17 +659,27 @@ In these five runs, LinearDML produced lower mean individual-effect MAE and RMSE
 
 The seed 42 holdout evaluation produced:
 
-| Metric | Result |
-|---|---:|
-| True holdout ATE | 0.074861 |
-| LinearDML estimated ATE | 0.092794 |
-| NonParamDML estimated ATE | 0.090849 |
-| LinearDML MAE | 0.020994 |
-| LinearDML RMSE | 0.024203 |
+| Estimator | True ATE | Estimated ATE | Bias | MAE | RMSE |
+|---|---:|---:|---:|---:|---:|
+| Difference-in-Means | 0.076858 | 0.090660 | +0.013802 | N/A | N/A |
+| LinearDML | 0.076858 | 0.092794 | +0.015936 | 0.019827 | 0.022772 |
+| NonParamDML | 0.076858 | 0.090849 | +0.013990 | 0.034340 | 0.047038 |
 
 The investigation also examined differences between the training and test samples. The seed 42 result illustrates how sampling variation can affect holdout estimates.
 
 It should be interpreted alongside the repeated-seed results rather than as an isolated measure of model performance.
+
+### 11.5 DML Model Configuration Comparison
+
+Three Gradient Boosting configurations were evaluated over five random seeds. Each run used 8,000 training customers and 2,000 holdout customers.
+
+| Configuration | Trees | Minimum samples per leaf | Mean MAE | Mean RMSE | Mean effect correlation | Mean absolute ATE bias |
+|---|---:|---:|---:|---:|---:|---:|
+| Baseline | 100 | 20 | 0.018132 | 0.022214 | 0.587706 | 0.003982 |
+| Config A | 100 | 10 | 0.018626 | 0.022732 | 0.585795 | 0.003745 |
+| Config B | 200 | 20 | 0.018033 | 0.022106 | 0.590228 | 0.004217 |
+
+Config B produced marginally lower mean MAE and RMSE and slightly higher effect correlation. However, the differences were small, and Config A had the lowest mean absolute ATE bias. The baseline remains a reasonable choice because of its simpler configuration.
 
 ## 12. Automated Tests
 
@@ -656,9 +699,11 @@ The complete test suite was executed using:
 python -m pytest -v
 ```
 
-<pre>
-38 passed in 10.50s
-</pre>
+Test result:
+
+```text
+38 passed in 13.87s
+```
 
 All 38 tests passed in the verified development environment.
 
@@ -829,4 +874,4 @@ The work combines exploratory data analysis, synthetic data generation, causal m
 
 The project uses both randomized experimental data and observational retail data, alongside synthetic data with known causal effects. Findings are interpreted according to the strengths and limitations of each data source.
 
-**Project status:** Integration and reproducibility checks and the automated test suite have been completed in the current development environment. Final documentation and submission-quality review are being completed.
+**Project status:** Core integration, reproducibility checks, and the automated test suite have been completed in the current development environment. Final repository review and submission preparation remain.

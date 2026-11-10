@@ -95,8 +95,27 @@ def main():
             probability_with_discount - probability_no_discount
         )
 
-    # Intended policy: equal weighting of the four discount levels.
-    true_effect = np.mean(counterfactual_effects, axis=0)
+    # Use the actual discount proportions among treated customers,
+    # consistently with validate_dml_against_truth.py.
+    treated_rates = df.loc[df["treatment"] == 1, "discount_rate"]
+    counts = treated_rates.value_counts()
+    missing_levels = set(DISCOUNT_LEVELS) - set(counts.index)
+
+    if missing_levels:
+        raise ValueError(
+            f"Missing discount levels: {sorted(missing_levels)}"
+        )
+
+    discount_weights = (
+        counts.reindex(DISCOUNT_LEVELS).to_numpy(dtype=float)
+        / len(treated_rates)
+    )
+
+    true_effect = np.average(
+        np.column_stack(counterfactual_effects),
+        axis=1,
+        weights=discount_weights,
+    )
     estimated_effect = merged["estimated_discount_effect"].to_numpy()
 
     report = pd.DataFrame({

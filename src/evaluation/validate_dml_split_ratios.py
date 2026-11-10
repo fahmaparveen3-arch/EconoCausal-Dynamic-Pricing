@@ -41,7 +41,7 @@ def true_purchase_probability(df, discount):
     return 1 / (1 + np.exp(-log_odds))
 
 
-def calculate_true_effect(df):
+def calculate_true_effect(df, discount_weights):
     """Calculate the true average policy effect for each customer."""
 
     control_probability = true_purchase_probability(df, 0.0)
@@ -51,7 +51,11 @@ def calculate_true_effect(df):
         for rate in DISCOUNTS
     ]
 
-    return np.mean(np.column_stack(effects), axis=1)
+    return np.average(
+        np.column_stack(effects),
+        axis=1,
+        weights=discount_weights,
+    )
 
 
 def main():
@@ -59,6 +63,18 @@ def main():
         raise FileNotFoundError(f"Dataset not found: {DATA_FILE}")
 
     df = pd.read_csv(DATA_FILE)
+    treated_rates = df.loc[df["treatment"] == 1, "discount_rate"]
+    counts = treated_rates.value_counts()
+    missing_levels = set(DISCOUNTS) - set(counts.index)
+
+    if missing_levels:
+        raise ValueError(f"Missing discount levels: {sorted(missing_levels)}")
+
+    discount_weights = (
+        counts.reindex(DISCOUNTS).to_numpy(dtype=float)
+        / len(treated_rates)
+    )
+
     results = []
 
     for test_ratio in TEST_RATIOS:
@@ -97,7 +113,7 @@ def main():
         if merged["estimated_discount_effect"].isna().any():
             raise ValueError("Some holdout estimates are missing.")
 
-        true_effect = calculate_true_effect(merged)
+        true_effect = calculate_true_effect(merged, discount_weights)
         estimated_effect = merged[
             "estimated_discount_effect"
         ].to_numpy()

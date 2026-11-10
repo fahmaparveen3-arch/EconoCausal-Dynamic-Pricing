@@ -56,7 +56,25 @@ def true_purchase_probability(df, discount):
 
 
 def true_average_effect(df):
-    """Calculate each customer's true average effect across four discounts."""
+    """Calculate true effects using actual treated discount proportions."""
+    treated_rates = df.loc[df["treatment"] == 1, "discount_rate"]
+
+    if treated_rates.empty:
+        raise ValueError("No treated customers found.")
+
+    counts = treated_rates.value_counts()
+    missing_levels = set(DISCOUNTS) - set(counts.index)
+
+    if missing_levels:
+        raise ValueError(
+            f"Missing discount levels: {sorted(missing_levels)}"
+        )
+
+    discount_weights = (
+        counts.reindex(DISCOUNTS).to_numpy(dtype=float)
+        / len(treated_rates)
+    )
+
     control_probability = true_purchase_probability(df, 0.0)
 
     effects = [
@@ -64,7 +82,11 @@ def true_average_effect(df):
         for discount in DISCOUNTS
     ]
 
-    return np.mean(np.column_stack(effects), axis=1)
+    return np.average(
+        np.column_stack(effects),
+        axis=1,
+        weights=discount_weights,
+    )
 
 
 def estimate_difference_in_means(train_df):
